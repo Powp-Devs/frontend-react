@@ -1,0 +1,17 @@
+/* Global styles imported by index.tsx */
+body, html, #root {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+}
+
+.app-container {
+  display: flex;
+  height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  overflow: auto;
+  background: #f7f7f7;
+}
