@@ -5,6 +5,7 @@ import CadastroClientes from './pages/cadastro/CadastroClientes';
 import Dashboard from './pages/Dashboard';
 import './styles/global.css';
 
+
 const App = () => {
   return (
     <div className="app-container">
