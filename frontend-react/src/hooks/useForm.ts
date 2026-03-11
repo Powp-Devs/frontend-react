@@ -7,16 +7,16 @@ interface UseFormOptions<T> {
 
 export function useForm<T extends Record<string, any>>(options: UseFormOptions<T>) {
   const [values, setValues] = useState<T>(options.initialValues);
-  const [errors, setErrors] = useState<Partial<Record<keyof T, string>>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof T | 'general', string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target as any;
-    
+
     setValues(prev => ({
       ...prev,
-      [name]: type === 'number' ? parseFloat(value) : 
-               type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
+      [name]: type === 'number' ? parseFloat(value) :
+               type === 'checkbox' ? (e.target as HTMLInputElement).checked :
                value
     }));
   }, []);
@@ -24,11 +24,11 @@ export function useForm<T extends Record<string, any>>(options: UseFormOptions<T
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     try {
       await options.onSubmit(values);
     } catch (error: any) {
-      setErrors({ general: error.message || 'Erro ao enviar formulário' });
+      setErrors(prev => ({ ...prev, general: error.message || 'Erro ao enviar formulário' }));
     } finally {
       setIsSubmitting(false);
     }

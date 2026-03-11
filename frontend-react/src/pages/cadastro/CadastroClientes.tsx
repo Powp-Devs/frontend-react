@@ -14,7 +14,8 @@ const CadastroCliente: React.FC = observer(() => {
 
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearch(e.target.value);
-        clientStore.loadClients(e.target.value);
+        // futuro: filtrar via API; por agora apenas recarrega
+        clientStore.loadClients();
     };
 
     return (
@@ -48,12 +49,12 @@ const CadastroCliente: React.FC = observer(() => {
                             </thead>
                             <tbody>
                                 {clientStore.clients.map(client => (
-                                    <tr key={client.codcli}>
-                                        <td>{client.codcli}</td>
-                                        <td>{client.name}</td>
+                                    <tr key={client.id}>
+                                        <td>{client.id}</td>
+                                        <td>{client.nome}</td>
                                         <td>{client.email}</td>
                                         <td>
-                                            <button onClick={() => clientStore.deleteClient(client.codcli)}>
+                                            <button onClick={() => clientStore.deleteClient(client.id)}>
                                                 Excluir
                                             </button>
                                         </td>

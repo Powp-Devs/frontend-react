@@ -3,6 +3,19 @@ import { NavLink } from 'react-router-dom';
 import { observer } from 'mobx-react-lite'; // Importante para reatividade futura
 import '../styles/sidebar.css';
 
+// Tipagens para o menu
+interface SubmenuItem {
+  label: string;
+  path: string;
+}
+
+interface MenuItem {
+  label: string;
+  icon?: React.ReactNode;
+  path?: string;
+  submenu?: SubmenuItem[];
+}
+
 // Ícones SVG para manter o padrão do seu HTML original
 const Icons = {
   Dashboard: () => (
@@ -56,20 +69,20 @@ const Sidebar: React.FC = observer(() => {
           <div key={item.label}>
             {item.submenu ? (
               <>
-                <div 
+                <div
                   className={`menu-item dropdown ${expandedMenu === item.label ? 'active' : ''}`}
                   onClick={() => toggleSubmenu(item.label)}
                 >
                   {item.icon}
                   <span className="sidebar-text">{item.label}</span>
                 </div>
-                
+
                 {/* Renderização Condicional do Submenu */}
                 <div className={`submenu ${expandedMenu === item.label ? 'show' : ''}`}>
-                  {item.submenu.map((sub) => (
-                    <NavLink 
-                      key={sub.path} 
-                      to={sub.path} 
+                  {item.submenu.map((sub: SubmenuItem) => (
+                    <NavLink
+                      key={sub.path}
+                      to={sub.path}
                       className={({ isActive }) => `submenu-item ${isActive ? 'active' : ''}`}
                     >
                       <span>{sub.label}</span>
@@ -78,8 +91,8 @@ const Sidebar: React.FC = observer(() => {
                 </div>
               </>
             ) : (
-              <NavLink 
-                to={item.path!} 
+              <NavLink
+                to={item.path!}
                 className={({ isActive }) => `menu-item ${isActive ? 'active' : ''}`}
               >
                 {item.icon}

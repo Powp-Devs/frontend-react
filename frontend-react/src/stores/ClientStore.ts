@@ -18,7 +18,17 @@ class ClientStore {
     makeAutoObservable(this);
   }
 
-  // Action para carregar clientes
+  // método de conveniência para compatibilidade com componentes existentes
+  loadClients(page = 1) {
+    return this.fetchClients(page);
+  }
+
+  // mobx getter para expor loading como isLoading
+  get isLoading() {
+    return this.loading;
+  }
+
+  // Action para carregar clientes (página ou busca futura)
   fetchClients = async (page = 1) => {
     this.loading = true;
     try {
