@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import CadastroClientes from './pages/cadastro/CadastroClientes';
+import CadastroFornecedor from './pages/cadastro/CadastroFornecedor';
 import Dashboard from './pages/Dashboard';
 import './styles/global.css';
 
@@ -14,6 +15,7 @@ const App = () => {
         <Routes>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/cadastro-cliente" element={<CadastroClientes />} />
+          <Route path="/cadastro-fornecedor" element={<CadastroFornecedor />} />
         </Routes>
       </main>
     </div>

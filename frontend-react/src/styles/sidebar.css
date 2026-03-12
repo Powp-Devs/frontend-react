@@ -1,15 +1,26 @@
 /* Sidebar Styles */
 .sidebar {
-  width: 256px;
+  width: 250px;
+  height: 100vh;
   background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
   color: #ecf0f1;
   display: flex;
   flex-direction: column;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-  overflow-y: auto;
-  flex-shrink: 0;
+  overflow-x: hidden;
+  transition: width 0.3s ease;
+  white-space: nowrap;
 }
 
+.sidebar.collapsed {
+  width: 70px;
+}
+
+.sidebar.collapsed .sidebar-text,
+.sidebar.collapsed .arrow-icon {
+  opacity: 0;
+  visibility: hidden;
+}
 .menu {
   flex: 1;
   list-style: none;
@@ -43,8 +54,12 @@
   flex-direction: column;
   background-color: rgba(0, 0, 0, 0.2);
   list-style: none;
-  padding: 0;
+  padding-bottom: 20px;
   margin: 0;
+}
+
+.submenu.show {
+  display: flex; /* Mostra quando a classe .show é adicionada */
 }
 
 .menu-item.dropdown:hover .submenu,
