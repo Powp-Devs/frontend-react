@@ -1,0 +1,194 @@
+@charset "UTF-8";
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@100;200;300;400;500;600;700;800&display=swap');
+
+:root {
+    --font0: 'Sora', sans-serif;
+    --fonte1: 'Fraunces', serif;
+    --fonte2: 'Montserrat', sans-serif;
+
+    --cor0: #F3EBE5;
+    --cor1: #3C8067;
+    --cor2: #214538;
+    --cor3: #0059ff;
+    --cor4: #005e17;
+    --cor5: #00b12c; 
+    --cor6: #23e654;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: black url(../assets/imagens/background.jpg);
+    background-position: center center;
+    background-size: cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.container {
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
+}
+
+section#container > div#imagem {
+    display: block;
+    background: black url(../assets/imagens/login.jpg);
+    background-position: center center;
+    background-size: cover;
+    float: left;
+    width: 50%;
+    height: 100%;
+    border-radius: 15px 0px 0px 15px;
+}
+
+.login-form {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+}
+
+h1 {
+    color: #333;
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 28px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+    font-weight: 500;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+}
+
+input:focus {
+    border-color: #4d90fe;
+    outline: none;
+}
+
+.btn-entrar {
+    width: 100%;
+    padding: 12px;
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-entrar:hover {
+    background-color: #3367d6;
+}
+
+.links {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.link-esqueci {
+    color: #4285f4;
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.3s;
+}
+
+.link-esqueci:hover {
+    color: #3367d6;
+    text-decoration: underline;
+}
+
+.forca-senha {
+    margin-top: 8px;
+}
+
+.barra-forca {
+    height: 5px;
+    background-color: #eee;
+    border-radius: 3px;
+    margin-bottom: 5px;
+    overflow: hidden;
+}
+
+#indicador-forca {
+    height: 100%;
+    width: 0;
+    background-color: #ddd;
+    transition: width 0.3s, background-color 0.3s;
+}
+
+#texto-forca {
+    font-size: 12px;
+    color: #777;
+}
+
+
+/*Pop Up*/
+
+.popup-sucesso {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.popup-conteudo {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0px 0px 10px #333;
+}
+
+.popup-conteudo p {
+    font-size: 18px;
+    margin-bottom: 20px;
+}
+
+#btn-fechar-popup {
+    background-color: #47d147;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+}
+#btn-fechar-popup:hover {
+    background-color: #3dbb3d;
+}
