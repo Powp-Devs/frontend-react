@@ -1,22 +1,14 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import Sidebar from './components/Sidebar';
-import CadastroClientes from './pages/cadastro/CadastroClientes';
-import CadastroFornecedor from './pages/cadastro/CadastroFornecedor';
-import Dashboard from './pages/Dashboard';
-import './styles/global.css';
+import Sidebar from './shared/components/layout/Sidebar';
+import AppRouter from './app/router';
+import './app/styles/global.css';
 
-
-const App = () => {
+const App: React.FC = () => {
   return (
     <div className="app-container">
       <Sidebar />
       <main className="main-content">
-        <Routes>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/cadastro-cliente" element={<CadastroClientes />} />
-          <Route path="/cadastro-fornecedor" element={<CadastroFornecedor />} />
-        </Routes>
+        <AppRouter />
       </main>
     </div>
   );

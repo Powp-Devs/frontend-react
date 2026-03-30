@@ -18,24 +18,6 @@ const Header: React.FC = () => {
 
   return (
     <header className="header" role="banner">
-      <form className="search-container" onSubmit={handleSearch}>
-        <input
-          type="search"
-          placeholder="Pesquisar..."
-          className="search-input"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          aria-label="Campo de pesquisa"
-        />
-        <button
-          type="submit"
-          className="search-button"
-          title="Realizar busca"
-          aria-label="Botão de pesquisa"
-        >
-          🔍
-        </button>
-      </form>
 
       <div className="actions">
         {searchTerm && (

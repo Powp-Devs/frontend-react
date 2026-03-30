@@ -1,43 +1,519 @@
-/* Reset e estilos globais */
-* {
+/* ============================================================
+   global.css — ERP Design System
+   Estratégia: este arquivo é o único CSS global do projeto.
+   - Seção 1: Reset & tokens de design (variáveis CSS)
+   - Seção 2: Base tipográfica e scroll
+   - Seção 3: Layout do app ERP (shell, sidebar, main)
+   - Seção 4: Utilitários de botão reutilizáveis
+   - Seção 5: Utilitários gerais (container, texto, animações)
+   - Seção 6: Responsividade
+
+   O que NÃO entra aqui: estilos de seções específicas
+   (Hero, Features, CTA, Footer da landing page).
+   Esses ficam em src/app/styles/landing.css ou em
+   módulos CSS de cada componente (*.module.css).
+   ============================================================ */
+
+/* ============================================================
+   1. RESET
+   ============================================================ */
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-html, body, #root {
+/* ============================================================
+   2. TOKENS DE DESIGN — fonte única de verdade para cores,
+      tipografia, espaçamento e sombras de todo o sistema.
+      Componentes consomem estas variáveis diretamente.
+   ============================================================ */
+:root {
+  /* Paleta principal */
+  --color-primary:        #004d40;   /* verde escuro — brand */
+  --color-primary-hover:  #2E7D32;   /* verde médio — hover */
+  --color-primary-dark:   #0F3A14;   /* verde muito escuro — pressed */
+  --color-primary-light:  rgba(27, 94, 32, 0.08); /* fundo sutil */
+
+  /* Neutros */
+  --color-white:          #FFFFFF;
+  --color-black:          #000000;
+  --color-gray-50:        #F9FAFB;
+  --color-gray-100:       #F3F4F6;
+  --color-gray-200:       #E5E7EB;   /* bordas */
+  --color-gray-400:       #9CA3AF;   /* texto desabilitado */
+  --color-gray-500:       #6B7280;   /* texto secundário */
+  --color-gray-700:       #374151;   /* footer bg accent */
+  --color-gray-800:       #1F2937;   /* footer bg */
+  --color-gray-900:       #111827;   /* texto títulos escuros */
+
+  /* Semânticos — estados */
+  --color-success:        #16A34A;
+  --color-warning:        #D97706;
+  --color-danger:         #DC2626;
+  --color-info:           #2563EB;
+
+  /* Aliases semânticos — usados nos componentes */
+  --color-text-primary:   var(--color-gray-900);
+  --color-text-secondary: var(--color-gray-500);
+  --color-text-disabled:  var(--color-gray-400);
+  --color-border:         var(--color-gray-200);
+  --color-surface:        var(--color-white);
+  --color-bg:             var(--color-gray-100);
+
+  /* Tipografia */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont,
+               'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  --text-xs:   0.75rem;    /* 12px */
+  --text-sm:   0.875rem;   /* 14px */
+  --text-base: 1rem;       /* 16px */
+  --text-lg:   1.125rem;   /* 18px */
+  --text-xl:   1.25rem;    /* 20px */
+  --text-2xl:  1.5rem;     /* 24px */
+  --text-3xl:  1.875rem;   /* 30px */
+  --text-4xl:  2.25rem;    /* 36px */
+  --text-5xl:  3rem;       /* 48px */
+
+  --font-normal:   400;
+  --font-medium:   500;
+  --font-semibold: 600;
+  --font-bold:     700;
+
+  --leading-tight:  1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed:1.75;
+
+  /* Espaçamento */
+  --space-1:  0.25rem;   /* 4px  */
+  --space-2:  0.5rem;    /* 8px  */
+  --space-3:  0.75rem;   /* 12px */
+  --space-4:  1rem;      /* 16px */
+  --space-5:  1.25rem;   /* 20px */
+  --space-6:  1.5rem;    /* 24px */
+  --space-8:  2rem;      /* 32px */
+  --space-10: 2.5rem;    /* 40px */
+  --space-12: 3rem;      /* 48px */
+  --space-16: 4rem;      /* 64px */
+  --space-20: 5rem;      /* 80px */
+
+  /* Border radius */
+  --radius-sm:   0.25rem;
+  --radius-md:   0.5rem;
+  --radius-lg:   0.75rem;
+  --radius-xl:   1rem;
+  --radius-full: 9999px;
+
+  /* Sombras */
+  --shadow-xs:  0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.10), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md:  0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-lg:  0 10px 15px rgba(0, 0, 0, 0.10), 0 4px 6px rgba(0, 0, 0, 0.05);
+  --shadow-xl:  0 20px 25px rgba(0, 0, 0, 0.10), 0 10px 10px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.15);
+
+  /* Transições */
+  --transition-fast:   150ms ease;
+  --transition-base:   250ms ease;
+  --transition-slow:   350ms ease;
+
+  /* Layout do ERP */
+  --sidebar-width:         240px;
+  --sidebar-collapsed-width: 64px;
+  --header-height:         64px;
+  --content-max-width:     1200px;
+
+  /* Z-index scale */
+  --z-base:    0;
+  --z-raised:  10;
+  --z-dropdown:200;
+  --z-sticky:  300;
+  --z-overlay: 400;
+  --z-modal:   500;
+  --z-toast:   600;
+}
+
+/* ============================================================
+   3. BASE — tipografia e comportamento global
+   ============================================================ */
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+html,
+body,
+#root {
   width: 100%;
   height: 100%;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 
-              'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-              sans-serif;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: var(--font-normal);
+  line-height: var(--leading-normal);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f5f5f5;
-  color: #333;
 }
 
-/* Container principal da aplicação */
+/* Tipografia base */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: var(--font-bold);
+  line-height: var(--leading-tight);
+  color: var(--color-text-primary);
+}
+
+p {
+  line-height: var(--leading-relaxed);
+  color: var(--color-text-secondary);
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-primary-hover);
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* Foco acessível — nunca remover sem substituir */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Seleção de texto */
+::selection {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary-dark);
+}
+
+/* Scrollbar customizada (WebKit) */
+::-webkit-scrollbar         { width: 6px; height: 6px; }
+::-webkit-scrollbar-track   { background: transparent; }
+::-webkit-scrollbar-thumb   { background: var(--color-gray-200); border-radius: var(--radius-full); }
+::-webkit-scrollbar-thumb:hover { background: var(--color-gray-400); }
+
+/* ============================================================
+   4. LAYOUT DO APP ERP
+   Estrutura: [Sidebar | [Header / Main]]
+   ============================================================ */
+
+/* Shell principal — envolve tudo */
 .app-container {
   display: flex;
   height: 100vh;
   overflow: hidden;
+  background-color: var(--color-bg);
 }
 
-/* Conteúdo principal */
+/* Sidebar */
+.sidebar {
+  width: var(--sidebar-width);
+  height: 100vh;
+  background-color: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: width var(--transition-base);
+  z-index: var(--z-sticky);
+}
+
+.sidebar.collapsed {
+  width: var(--sidebar-collapsed-width);
+}
+
+/* Coluna direita: header fixo + conteúdo scrollável */
 .main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-width: 0; /* evita overflow em flex */
 }
 
-/* Responsividade */
+/* Topbar/Header interno do app */
+.app-header {
+  height: var(--header-height);
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-6);
+  flex-shrink: 0;
+  z-index: var(--z-raised);
+  box-shadow: var(--shadow-xs);
+}
+
+/* Área de conteúdo da página — scrollável */
+.page-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-6);
+}
+
+/* Container centralizado dentro de page-content */
+.page-container {
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+/* ============================================================
+   5. UTILITÁRIOS DE BOTÃO
+   Migrados do index.css e normalizados com os tokens.
+   ============================================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    border-color     var(--transition-fast),
+    color            var(--transition-fast),
+    box-shadow       var(--transition-fast),
+    transform        var(--transition-fast);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/* Tamanhos */
+.btn-sm {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-xs);
+}
+
+.btn-lg {
+  padding: var(--space-4) var(--space-8);
+  font-size: var(--text-lg);
+}
+
+/* Variantes */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+}
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-secondary {
+  background-color: var(--color-gray-100);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--color-gray-200);
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.btn-outline:hover:not(:disabled) {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+}
+
+.btn-outline-white {
+  background-color: transparent;
+  color: var(--color-white);
+  border-color: var(--color-white);
+}
+.btn-outline-white:hover:not(:disabled) {
+  background-color: var(--color-white);
+  color: var(--color-primary);
+}
+
+.btn-danger {
+  background-color: var(--color-danger);
+  color: var(--color-white);
+}
+.btn-danger:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  border-color: transparent;
+}
+.btn-ghost:hover:not(:disabled) {
+  background-color: var(--color-gray-100);
+  color: var(--color-text-primary);
+}
+
+/* ============================================================
+   6. UTILITÁRIOS GERAIS
+   ============================================================ */
+
+/* Container de largura máxima (landing page e páginas públicas) */
+.container {
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+}
+
+/* Texto */
+.text-primary   { color: var(--color-primary) !important; }
+.text-secondary { color: var(--color-text-secondary) !important; }
+.text-danger    { color: var(--color-danger) !important; }
+.text-success   { color: var(--color-success) !important; }
+.text-warning   { color: var(--color-warning) !important; }
+
+/* Ícones — tamanho padrão alinhado com botões */
+.icon    { width: 1.25rem; height: 1.25rem; flex-shrink: 0; }
+.icon-sm { width: 1rem;    height: 1rem;    flex-shrink: 0; }
+.icon-lg { width: 1.5rem;  height: 1.5rem;  flex-shrink: 0; }
+
+/* Divisor */
+.divider {
+  height: 1px;
+  background-color: var(--color-border);
+  border: none;
+  margin: var(--space-4) 0;
+}
+
+/* Skeleton loader genérico */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-gray-100) 25%,
+    var(--color-gray-200) 50%,
+    var(--color-gray-100) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease infinite;
+  border-radius: var(--radius-md);
+}
+
+/* ============================================================
+   7. ANIMAÇÕES
+   ============================================================ */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(var(--space-5)); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(calc(var(--space-5) * -1)); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-10px); }
+}
+
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Classes de animação aplicáveis */
+.animate-fade-in     { animation: fadeIn      0.5s ease-out both; }
+.animate-slide-left  { animation: slideInLeft 0.4s ease-out both; }
+.animate-float       { animation: float       3s ease-in-out infinite; }
+
+/* ============================================================
+   8. RESPONSIVIDADE
+   ============================================================ */
+@media (max-width: 1024px) {
+  :root {
+    --sidebar-width: 200px;
+  }
+}
+
 @media (max-width: 768px) {
+  :root {
+    --sidebar-width: 0px;
+    --header-height: 56px;
+  }
+
   .app-container {
     flex-direction: column;
+  }
+
+  .sidebar {
+    /* Em mobile, a sidebar vira um drawer controlado via JS/classe */
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: var(--sidebar-width-mobile, 260px);
+    transform: translateX(-100%);
+    transition: transform var(--transition-base);
+    z-index: var(--z-overlay);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .page-content {
+    padding: var(--space-4);
+  }
+
+  .container {
+    padding: 0 var(--space-4);
+  }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 15px;
+  }
+
+  .btn-lg {
+    padding: var(--space-3) var(--space-6);
+    font-size: var(--text-base);
   }
 }

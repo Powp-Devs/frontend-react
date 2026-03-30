@@ -9,13 +9,61 @@ const api = axios.create({
 });
 
 class ClientStore {
-  clients: Client[] = [];
+  clients: Client[] = [
+    {
+      id: 1,
+      nome: "João Silva",
+      email: "joao.silva@email.com",
+      telefone: "(11) 98765-4321",
+      endereco: "Rua A, 100",
+      cidade: "São Paulo",
+      estado: "SP",
+    },
+    {
+      id: 2,
+      nome: "Maria Santos",
+      email: "maria.santos@email.com",
+      telefone: "(21) 99876-5432",
+      endereco: "Avenida B, 200",
+      cidade: "Rio de Janeiro",
+      estado: "RJ",
+    },
+    {
+      id: 3,
+      nome: "Pedro Oliveira",
+      email: "pedro.oliveira@email.com",
+      telefone: "(31) 97654-3210",
+      endereco: "Rua C, 300",
+      cidade: "Belo Horizonte",
+      estado: "MG",
+    },
+    {
+      id: 4,
+      nome: "Ana Costa",
+      email: "ana.costa@email.com",
+      telefone: "(85) 98543-2109",
+      endereco: "Rua D, 400",
+      cidade: "Fortaleza",
+      estado: "CE",
+    },
+    {
+      id: 5,
+      nome: "Carlos Ferreira",
+      email: "carlos.ferreira@email.com",
+      telefone: "(41) 99432-1098",
+      endereco: "Avenida E, 500",
+      cidade: "Curitiba",
+      estado: "PR",
+    },
+  ];
   loading: boolean = false;
   totalItems: number = 0;
   currentPage: number = 1;
 
   constructor() {
     makeAutoObservable(this);
+    // Atualiza totalItems com base nos dados mockados
+    this.totalItems = this.clients.length;
   }
 
   // método de conveniência para compatibilidade com componentes existentes
