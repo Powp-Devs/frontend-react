@@ -1,8 +1,7 @@
-// src/pages/CadastroCliente.tsx
-import React, { useEffect, useState, FormEvent } from "react";
-import { observer } from "mobx-react-lite";
+import React, { useState, FormEvent } from "react";
 import Header from "../../shared/components/layout/Header";
-import { clientStore } from "../../stores/ClientStore";
+import { useClientManager } from "../../hooks/useClientManager";
+import { Client, SortColumn } from "../../types/Client";
 import "../../styles/cadastroCliente.css";
 
 // Ícones
@@ -52,14 +51,28 @@ interface ClientFormState {
     estado?: string;
 }
 
-const CadastroCliente: React.FC = observer(() => {
+const CadastroCliente: React.FC = () => {
+    const {
+        selectedClients,
+        sortConfig,
+        addClient,
+        updateClient,
+        deleteClient,
+        toggleSelection,
+        toggleSelectAll,
+        handleSort,
+        exportToCSV,
+        getProcessedClients,
+    } = useClientManager();
+
     const [searchTerm, setSearchTerm] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [clientToDelete, setClientToDelete] = useState<number | null>(null);
 
-    const initialFormState: ClientFormState = {
+    // Estado do Formulário
+    const initialFormState: Partial<Client> = {
         nome: "",
         email: "",
         telefone: "",
@@ -68,12 +81,9 @@ const CadastroCliente: React.FC = observer(() => {
         estado: "",
     };
 
-    const [formData, setFormData] = useState<ClientFormState>(initialFormState);
+    const [formData, setFormData] = useState<Partial<Client>>(initialFormState);
 
-    // Equivale ao DOMContentLoaded/init()
-    useEffect(() => {
-        clientStore.loadClients();
-    }, []);
+    const filteredClients = getProcessedClients(searchTerm);
 
     // Handlers do Modal
     const openNewClientModal = () => {
@@ -82,7 +92,7 @@ const CadastroCliente: React.FC = observer(() => {
         setIsModalOpen(true);
     };
 
-    const openEditModal = (client: any) => {
+    const openEditModal = (client: Partial<Client>) => {
         setFormData(client);
         setEditingId(client.id);
         setIsModalOpen(true);
@@ -102,11 +112,9 @@ const CadastroCliente: React.FC = observer(() => {
         }
 
         if (editingId) {
-            // Update logic (caso tenha no store)
-            // updateClient(editingId, formData);
+            updateClient(editingId, formData);
         } else {
-            // Add logic (caso tenha no store)
-            // addClient(formData);
+            addClient(formData as any);
         }
 
         setIsModalOpen(false);
@@ -120,100 +128,143 @@ const CadastroCliente: React.FC = observer(() => {
 
     const executeDelete = () => {
         if (clientToDelete) {
-            clientStore.deleteClient(clientToDelete);
+            deleteClient(clientToDelete);
             setIsDeleteModalOpen(false);
             setClientToDelete(null);
         }
     };
 
-    const filteredClients = clientStore.clients.filter((client) =>
-        client.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
     return (
-        <main className="main-content">
-            <Header />
+        <div className="app-container">
+            <main className="main-content">
+                <Header />
 
-            {/* Sub-header da página */}
-            <div
-                className="content-header"
-                style={{
-                    padding: "20px",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                }}
-            >
-                <div className="search-container">
-                    <input
-                        type="text"
-                        placeholder="Pesquisar clientes..."
-                        className="search-input"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+                {/* Sub-header da página */}
+                <div
+                    className="content-header"
+                    style={{
+                        padding: "20px",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                    }}
+                >
+                    <div className="search-container">
+                        <input
+                            type="text"
+                            placeholder="Pesquisar"
+                            className="search-input"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="actions" style={{ display: "flex", gap: "10px" }}>
+                        <button className="btn btn-outline" onClick={exportToCSV}>
+                            Export
+                        </button>
+
+                        <button
+                            className="btn btn-primary"
+                            onClick={openNewClientModal}
+                        >
+                            Novo Cliente
+                        </button>
+                    </div>
                 </div>
 
-                <div className="actions" style={{ display: "flex", gap: "10px" }}>
-                    <button
-                        className="btn btn-primary"
-                        onClick={openNewClientModal}
-                    >
-                        Novo Cliente
-                    </button>
-                </div>
-            </div>
-
-            <section className="suppliers-section">
-                <div className="table-container">
-                    {clientStore.isLoading ? (
-                        <p>Carregando...</p>
-                    ) : (
+                <section className="suppliers-section">
+                    <div className="table-container">
                         <table className="suppliers-table">
                             <thead>
                                 <tr>
-                                    <th>Cod.</th>
-                                    <th>Nome</th>
-                                    <th>Email</th>
-                                    <th>Telefone</th>
-                                    <th>Ações</th>
+                                    <th className="checkbox-column">
+                                        <input
+                                            type="checkbox"
+                                            checked={
+                                                filteredClients.length > 0 &&
+                                                selectedClients.size ===
+                                                    filteredClients.length
+                                            }
+                                            onChange={() =>
+                                                toggleSelectAll(filteredClients)
+                                            }
+                                        />
+                                    </th>
+
+                                    <SortableHeader
+                                        label="Cod."
+                                        column="id"
+                                        currentSort={sortConfig}
+                                        onSort={handleSort}
+                                    />
+
+                                    <SortableHeader
+                                        label="Nome"
+                                        column="nome"
+                                        currentSort={sortConfig}
+                                        onSort={handleSort}
+                                    />
+
+                                    <SortableHeader
+                                        label="E-MAIL"
+                                        column="email"
+                                        currentSort={sortConfig}
+                                        onSort={handleSort}
+                                    />
+
+                                    <SortableHeader
+                                        label="Telefone"
+                                        column="telefone"
+                                        currentSort={sortConfig}
+                                        onSort={handleSort}
+                                    />
+
+                                    <th>Edit</th>
+                                    <th>Delete</th>
                                 </tr>
                             </thead>
+
                             <tbody>
                                 {filteredClients.map((client) => (
                                     <tr key={client.id}>
+                                        <td className="checkbox-column">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedClients.has(
+                                                    client.id,
+                                                )}
+                                                onChange={() =>
+                                                    toggleSelection(client.id)
+                                                }
+                                            />
+                                        </td>
+
                                         <td>{client.id}</td>
+
                                         <td>{client.nome}</td>
+
                                         <td>{client.email}</td>
+
                                         <td>{client.telefone || "-"}</td>
+
                                         <td>
                                             <button
+                                                className="action-btn edit-btn"
                                                 onClick={() =>
                                                     openEditModal(client)
                                                 }
-                                                title="Editar"
-                                                style={{
-                                                    background: "none",
-                                                    border: "none",
-                                                    cursor: "pointer",
-                                                    marginRight: "10px",
-                                                    color: "var(--color-primary)",
-                                                }}
                                             >
                                                 <EditIcon />
                                             </button>
+                                        </td>
+
+                                        <td>
                                             <button
+                                                className="action-btn delete-btn"
                                                 onClick={() =>
                                                     confirmDelete(client.id)
                                                 }
-                                                title="Excluir"
-                                                style={{
-                                                    background: "none",
-                                                    border: "none",
-                                                    cursor: "pointer",
-                                                    color: "var(--color-danger)",
-                                                }}
                                             >
                                                 <DeleteIcon />
                                             </button>
@@ -224,11 +275,10 @@ const CadastroCliente: React.FC = observer(() => {
                                 {filteredClients.length === 0 && (
                                     <tr>
                                         <td
-                                            colSpan={5}
+                                            colSpan={7}
                                             style={{
                                                 textAlign: "center",
                                                 padding: "20px",
-                                                color: "var(--color-text-secondary)",
                                             }}
                                         >
                                             Nenhum cliente encontrado
@@ -237,9 +287,9 @@ const CadastroCliente: React.FC = observer(() => {
                                 )}
                             </tbody>
                         </table>
-                    )}
-                </div>
-            </section>
+                    </div>
+                </section>
+            </main>
 
             {/* Modal de Cadastro/Edição */}
             {isModalOpen && (
@@ -247,9 +297,7 @@ const CadastroCliente: React.FC = observer(() => {
                     <div className="modal-content">
                         <div className="modal-header">
                             <h2>
-                                {editingId
-                                    ? "Editar Cliente"
-                                    : "Novo Cliente"}
+                                {editingId ? "Editar Cliente" : "Novo Cliente"}
                             </h2>
 
                             <button
@@ -342,10 +390,7 @@ const CadastroCliente: React.FC = observer(() => {
                                         Cancelar
                                     </button>
 
-                                    <button
-                                        type="submit"
-                                        className="btn btn-primary"
-                                    >
+                                    <button type="submit" className="btn btn-primary">
                                         Salvar
                                     </button>
                                 </div>
@@ -371,9 +416,7 @@ const CadastroCliente: React.FC = observer(() => {
                         </div>
 
                         <div className="modal-body">
-                            <p>
-                                Tem certeza que deseja excluir este cliente?
-                            </p>
+                            <p>Tem certeza que deseja excluir este cliente?</p>
 
                             <div className="form-group actions">
                                 <button
@@ -396,8 +439,28 @@ const CadastroCliente: React.FC = observer(() => {
                     </div>
                 </div>
             )}
-        </main>
+        </div>
     );
-});
+};
+
+// Componente Auxiliar para Cabeçalho Ordenável
+const SortableHeader: React.FC<{
+    label: string;
+    column: SortColumn;
+    currentSort: { column: SortColumn; direction: "asc" | "desc" };
+    onSort: (column: SortColumn) => void;
+}> = ({ label, column, currentSort, onSort }) => {
+    const isActive = currentSort.column === column;
+
+    return (
+        <th
+            className={`sortable ${isActive ? currentSort.direction : ""}`}
+            onClick={() => onSort(column)}
+            style={{ cursor: "pointer" }}
+        >
+            {label} {isActive && (currentSort.direction === "asc" ? "↑" : "↓")}
+        </th>
+    );
+};
 
 export default CadastroCliente;
