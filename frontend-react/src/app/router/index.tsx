@@ -12,6 +12,7 @@ const AppRouter: React.FC = () => {
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/cadastro-cliente" element={<CadastroClientes />} />
       <Route path="/cadastro-fornecedor" element={<CadastroFornecedor />} />
+      <Route path="/cadastro-funcionarios" element={<CadastroFuncionario />} />
       <Route path="/usuarios" element={<OrdersPage />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
       <Route path="/cadastro-funcionarios" element={<CadastroFuncionario />} />
