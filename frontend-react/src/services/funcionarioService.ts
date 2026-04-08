@@ -1,5 +1,5 @@
 import apiClient from './api';
-import { Funcionario, Response, PaginatedResponse } from '@/types/index.d';
+import { Funcionario, Response, PaginatedResponse } from '@/types';
 
 export const funcionarioService = {
   // Obter todos os funcionários

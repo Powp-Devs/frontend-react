@@ -1,5 +1,5 @@
 import apiClient from './api';
-import { Venda, Response, PaginatedResponse } from '@/types/index.d';
+import { Venda, Response, PaginatedResponse } from '@/types';
 
 export const vendaService = {
   // Obter todas as vendas

@@ -1,8 +1,8 @@
 import React, { useState, FormEvent } from "react";
-import Header from "../../shared/components/layout/Header";
-import { useClientManager } from "../../hooks/useClientManager";
-import { Client, SortColumn } from "../../types/Client";
-import "../../styles/cadastroCliente.css";
+import Header from "@/shared/components/layout/Header";
+import { useClientManager } from "@/hooks/useClientManager";
+import { Client, SortColumn } from "@/types/Client";
+import "@/styles/cadastroCliente.css";
 
 // Ícones
 
@@ -41,15 +41,6 @@ const DeleteIcon = () => (
         <line x1="14" y1="11" x2="14" y2="17"></line>
     </svg>
 );
-
-interface ClientFormState {
-    nome: string;
-    email: string;
-    telefone?: string;
-    endereco?: string;
-    cidade?: string;
-    estado?: string;
-}
 
 const CadastroCliente: React.FC = () => {
     const {
@@ -94,7 +85,9 @@ const CadastroCliente: React.FC = () => {
 
     const openEditModal = (client: Partial<Client>) => {
         setFormData(client);
-        setEditingId(client.id);
+        if (client.id !== undefined) {
+            setEditingId(client.id);
+        }
         setIsModalOpen(true);
     };
 

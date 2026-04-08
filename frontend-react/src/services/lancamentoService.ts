@@ -1,5 +1,5 @@
 import apiClient from './api';
-import { Lancamento, Response, PaginatedResponse } from '@/types/index.d';
+import { Lancamento, Response, PaginatedResponse } from '@/types';
 
 export const lancamentoService = {
   // Obter todos os lançamentos

@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
-import { Response } from '@/types/index.d';
+import { Response } from '@/types';
 
 interface ApiConfig {
   baseURL?: string;

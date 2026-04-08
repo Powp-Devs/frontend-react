@@ -1,5 +1,5 @@
 import apiClient from './api';
-import { Produto, Response, PaginatedResponse } from '@/types/index.d';
+import { Produto, Response, PaginatedResponse } from '@/types';
 
 export const produtoService = {
   // Obter todos os produtos

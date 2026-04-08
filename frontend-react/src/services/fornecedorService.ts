@@ -1,5 +1,5 @@
 import apiClient from './api';
-import { Fornecedor, Response, PaginatedResponse } from '@/types/index.d';
+import { Fornecedor, Response, PaginatedResponse } from '@/types';
 
 export const fornecedorService = {
   // Obter todos os fornecedores

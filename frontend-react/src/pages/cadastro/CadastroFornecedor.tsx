@@ -1,8 +1,8 @@
 import React, { useState, FormEvent } from "react";
-import Header from "../../shared/components/layout/Header";
-import { useSupplierManager } from "../../hooks/useSupplierManager";
-import { Supplier, SortColumn } from "../../types/Supplier";
-import "../../styles/cadastroFornecedor.css";
+import Header from "@/shared/components/layout/Header";
+import { useSupplierManager } from "@/hooks/useSupplierManager";
+import { Supplier, SortColumn } from "@/types/Supplier";
+import "@/styles/cadastroFornecedor.css";
 
 // Ícones
 
