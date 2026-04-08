@@ -50,7 +50,7 @@ const menuItems: MenuItem[] = [
 
 const Sidebar: React.FC = observer(() => {
   // Se quiser que ela comece aberta, deixe false. Se quiser fechada, true.
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [expandedMenu, setExpandedMenu] = useState<string | null>('Cadastro');
 
   const handleSubmenuToggle = (label: string) => {
