@@ -1,3 +1,5 @@
+export type SortColumn = "id" | "nome" | "email" | "telefone";
+
 export interface Client {
   id: number;
   nome: string;
