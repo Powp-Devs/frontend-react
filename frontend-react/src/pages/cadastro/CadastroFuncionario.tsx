@@ -1,11 +1,10 @@
-import React, { useEffect, useState, FormEvent } from "react";
-import { observer } from "mobx-react-lite";
-import { Funcionario } from "../../types/Employer";
+import React, {useState, useEffect, useMemo, FormEvent} from "react";
 import Header from "../../shared/components/layout/Header";
+import { useEmployeeManager } from "../../hooks/useEmployee";
+import { Employee, SortColumn } from "@/types/Employee";
 import "../../styles/cadastroFuncionario.css";
-import { employeeStore } from "@/stores/EmployStore";
 
-type EmployFormState = Partial<Funcionario>;
+// Íncones
 
 const EditIcon = () => (
     <svg
@@ -43,348 +42,389 @@ const DeleteIcon = () => (
     </svg>
 );
 
-const CadastroFuncionario: React.FC = observer(() => {
-    const [searchTerm, setSearchTerm] = useState("");
-    const [isModalOpen, setIsModalOpen] = useState(false);
+
+const CadastroFuncionario: React.FC = () => {
+    const { 
+        employees,
+        selectedEmployees,
+        searchTerm,
+        sortConfig,
+        filterDepartment,
+        setSearchTerm,
+        setFilterDepartment,
+        exportToCSV,
+        addEmployee,
+        updateEmployee,
+        deleteEmployee,
+        toggleSelection,
+        toggleSelectAll,
+        handleSort,
+        getProcessedEmployees
+    } = useEmployeeManager();
+
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [employeeToDelete, setEmployeeToDelete] = useState<number | null>(null);
-
-    const initialFormState: EmployFormState = {
-        nome: "",
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    
+    const initialFormState: Partial<Employee> = {
+        name: "",
         email: "",
-        telefone: "",
-        endereco: "",
-        cidade: "",
-        estado: "",
+        position: "",
+        department: "",
     };
 
-    const [formData, setFormData] = useState<EmployFormState>(initialFormState);
+    const [formData, setFormData] = useState<Partial<Employee>>(initialFormState);
 
-    useEffect(() => {
-        employeeStore.loadClients();
-    }, []);
+    const filteredEmployees = getProcessedEmployees(searchTerm);
 
-    // Handlers do Modal
+    // Funções para abrir handlers do modal
     const openNewEmployeeModal = () => {
         setFormData(initialFormState);
         setEditingId(null);
         setIsModalOpen(true);
     };
 
-    const openEditModal = (employee: any) => {
+    const openEditEmployeeModal = (employee: Employee) => {
         setFormData(employee);
         setEditingId(employee.id);
         setIsModalOpen(true);
     };
 
     const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+        const { name, value, type } = e.target;
+
+        setFormData((prev) => ({ ...prev, [name]: type === "number" ? Number(value) : value }));
     };
 
-    const handleSubmit = async (e: FormEvent) => {
+    const handleFormSubmit = (e: FormEvent) => {
         e.preventDefault();
 
-        if (!formData.nome || !formData.email) {
-            alert("Preencha os campos obrigatórios (Nome e Email)");
+        if (!formData.name || !formData.email) {
+            alert("Nome e email são obrigatórios.");
             return;
-        }
 
-        try {
-            await employeeStore.saveEmployee(formData);
-            setIsModalOpen(false);
-        } catch (error) {
-            alert("Erro ao salvar funcionário");
+        } 
+        if (editingId) {
+            updateEmployee(editingId, formData);
+        } else {
+            addEmployee(formData as any);
+        }
+        setIsModalOpen(false);
+    };
+    // Funções para abrir handlers de delete
+    const comfirmDelete = (id: number) => {
+        setEmployeeToDelete(id);
+        setIsDeleteModalOpen(true);
+    };
+    const executeDelete = () => {
+        if (employeeToDelete) {
+            deleteEmployee(employeeToDelete);
+            setIsDeleteModalOpen(false);
+            setEmployeeToDelete(null);
         }
     };
 
-     // Handlers de Delete
-    const confirmDelete = (id: number) => {
-         setEmployeeToDelete(id);
-         setIsDeleteModalOpen(true);
-     };
-
-    const executeDelete = () => {
-         if (employeeToDelete) {
-             employeeStore.deleteEmployee(employeeToDelete);
-             setIsDeleteModalOpen(false);
-             setEmployeeToDelete(null);
-         }
-     };
-
-    const filteredEmployees = employeeStore.employees.filter((employee) =>
-         employee.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-         (employee.email && employee.email.toLowerCase().includes(searchTerm.toLowerCase()))
-     );
-
     return (
-        <main className="main-content">
+    <div className="app-container">
+        <main className="main-content"> 
             <Header />
-
-            {/* Sub-header da página */}
-            <div
-                className="content-header"
-                style={{
-                    padding: "20px",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                }}
+            <div className="container-header"
+                    style={{
+                        padding: "20px",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                    }}
             >
                 <div className="search-container">
                     <input
-                        type="text"
-                        placeholder="Pesquisar Funcionários..."
-                        className="search-input"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                    type="text"
+                    placeholder="Pesquisar"
+                    className="search-input"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-
-                <div className="actions" style={{ display: "flex", gap: "10px" }}>
-                    <button
-                        className="btn btn-primary"
+                <div className="actions"
+                    style={{ display: "flex", gap:"10px" }}
+                >
+                    <button className="btn btn-outline"
+                        onClick={exportToCSV}
+                    >
+                        Exportar
+                    </button>
+                    <button className="btn btn-primary"
                         onClick={openNewEmployeeModal}
                     >
                         Novo Funcionário
                     </button>
-                </div>
+                    </div>
             </div>
 
-            <section className="suppliers-section">
+            <section className="employee-section">
                 <div className="table-container">
-                    {employeeStore.isLoading ? (
-                        <p>Carregando...</p>
-                    ) : (
-                        <table className="suppliers-table">
-                            <thead>
-                                <tr>
-                                    <th>Cod.</th>
-                                    <th>Nome</th>
-                                    <th>Email</th>
-                                    <th>Telefone</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredEmployees.map((employee) => (
-                                    <tr key={employee.id}>
-                                        <td>{employee.id}</td>
-                                        <td>{employee.nome}</td>
-                                        <td>{employee.email}</td>
-                                        <td>{employee.telefone || "-"}</td>
-                                        <td>
-                                            <button
-                                                onClick={() =>
-                                                    openEditModal(employee)
-                                                }
-                                                title="Editar"
-                                                style={{
-                                                    background: "none",
-                                                    border: "none",
-                                                    cursor: "pointer",
-                                                    marginRight: "10px",
-                                                    color: "var(--color-primary)",
-                                                }}
-                                            >
-                                                <EditIcon />
-                                            </button>
-                                            <button
-                                                onClick={() =>
-                                                    confirmDelete(employee.id)
-                                                }
-                                                title="Excluir"
-                                                style={{
-                                                    background: "none",
-                                                    border: "none",
-                                                    cursor: "pointer",
-                                                    color: "var(--color-danger)",
-                                                }}
-                                            >
-                                                <DeleteIcon />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
+                    <table className="employee-table">
+                        <thead>
+                            <tr>
+                                <th className="checkbox-column">   
+                                    <input type="checkbox" 
+                                            checked={
+                                                filteredEmployees.length > 0 &&
+                                                selectedEmployees.size === 
+                                                filteredEmployees.length
+                                            }
+                                            onChange={() => toggleSelectAll(filteredEmployees)}
+                                        />
+                                </th>
+                                <SortableHeader
+                                    label="cod. Func."
+                                    column="id"
+                                    currentSort={sortConfig}
+                                    onSort={handleSort}
+                                />
+                                <SortableHeader
+                                    label="Nome"
+                                    column="name"
+                                    currentSort={sortConfig}
+                                    onSort={handleSort}
+                                />
+                                <SortableHeader
+                                    label="E-mail"
+                                    column="email"
+                                    currentSort={sortConfig}
+                                    onSort={handleSort}
+                                />
+                                <SortableHeader
+                                    label="Cargo"
+                                    column="position"
+                                    currentSort={sortConfig}
+                                    onSort={handleSort}
+                                />
+                                <SortableHeader
+                                    label="Departamento"
+                                    column="department"
+                                    currentSort={sortConfig}
+                                    onSort={handleSort}
+                                />
+                                <SortableHeader
+                                    label="Salário"
+                                    column="salary"
+                                    currentSort={sortConfig}
+                                    onSort={handleSort}
+                                />
+                                <th>Edit</th>
 
-                                {filteredEmployees.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={5}
-                                            style={{
-                                                textAlign: "center",
-                                                padding: "20px",
-                                                color: "var(--color-text-secondary)",
-                                            }}
+                                <th>Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredEmployees.map((employee) => (
+                                <tr key={employee.id}>
+                                    <td className="checkbox-column">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedEmployees.has(
+                                                employee.id
+                                            )}
+                                            onChange={() =>
+                                                toggleSelection(employee.id)
+                                            }
+                                        />
+                                    </td>
+                                    <td>{employee.id}</td>
+
+                                    <td>{employee.name}</td>
+
+                                    <td>{employee.email}</td>
+
+                                    <td>{employee.position}</td>
+
+                                    <td>{employee.department}</td>
+
+                                    <td>{employee.salary.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+
+                                    <td>
+                                        <button className="action-btn edit-btn" 
+                                        onClick={() => openEditEmployeeModal(employee)}
                                         >
-                                            Nenhum funcionário encontrado
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    )}
+                                            <EditIcon />
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <button className="action-btn delete-btn" 
+                                        onClick={() => deleteEmployee(employee.id)}
+                                        >
+                                            <DeleteIcon />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                            {filteredEmployees.length === 0 && (
+                                <tr>
+                                    <td colSpan={7} 
+                                    style={{ 
+                                        textAlign: "center", 
+                                        padding: "20px" }}
+                                    >
+                                        Nenhum funcionário encontrado.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
                 </div>
             </section>
+        </main>
+        {/* Modals */}
 
-            {/* Modal de Cadastro/Edição */}
-            {isModalOpen && (
-                <div className="modal show" style={{ display: "flex" }}>
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h2>
-                                {editingId
-                                    ? "Editar Funcionário"
-                                    : "Novo Funcionário"}
-                            </h2>
-
-                            <button
-                                className="close-modal"
-                                onClick={() => setIsModalOpen(false)}
-                            >
-                                &times;
-                            </button>
-                        </div>
-
+        {isModalOpen && (
+            <div className="modal-show" style={{ display: "flex" }}>
+                <div className="modal-content">
+                    <div className="modal-header">
+                        <h2>
+                            {editingId 
+                            ? "Editar Funcionário" : 
+                            "Novo Funcionário"}
+                        </h2>
+                        <button 
+                            className="close-modal" 
+                            onClick={() => setIsModalOpen(false)}>
+                            &times;
+                        </button>
+                    </div>
                         <div className="modal-body">
-                            <form onSubmit={handleSubmit}>
-                                <h4>Dados do Funcionário</h4>
-
-                                <div className="form-group-row">
-                                    <div className="form-group">
-                                        <label>Nome Completo *</label>
-                                        <input
-                                            type="text"
-                                            name="nome"
-                                            value={formData.nome}
-                                            onChange={handleFormChange}
-                                            required
-                                        />
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>Email *</label>
-                                        <input
-                                            type="email"
-                                            name="email"
-                                            value={formData.email}
-                                            onChange={handleFormChange}
-                                            required
-                                        />
-                                    </div>
+                            <form onSubmit={handleFormSubmit}>
+                                <div className="form-group">
+                                    <label>Nome *</label>
+                                    <input
+                                        type="text"
+                                        id="name"
+                                        name="name"
+                                        value={formData.name || ''}
+                                        onChange={handleFormChange}
+                                    />
                                 </div>
-
-                                <div className="form-group-row">
-                                    <div className="form-group">
-                                        <label>Telefone</label>
-                                        <input
-                                            type="tel"
-                                            name="telefone"
-                                            value={formData.telefone}
-                                            onChange={handleFormChange}
-                                        />
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>Endereço</label>
-                                        <input
-                                            type="text"
-                                            name="endereco"
-                                            value={formData.endereco}
-                                            onChange={handleFormChange}
-                                        />
-                                    </div>
+                                <div className="form-group">
+                                    <label htmlFor="email">Email</label>
+                                    <input
+                                        type="email"
+                                        id="email"
+                                        name="email"
+                                        value={formData.email || ''}
+                                        onChange={handleFormChange}
+                                    />
                                 </div>
-
-                                <div className="form-group-row">
-                                    <div className="form-group">
-                                        <label>Cidade</label>
-                                        <input
-                                            type="text"
-                                            name="cidade"
-                                            value={formData.cidade}
-                                            onChange={handleFormChange}
-                                        />
-                                    </div>
-
-                                    <div className="form-group estado-group">
-                                        <label>Estado</label>
-                                        <input
-                                            type="text"
-                                            name="estado"
-                                            value={formData.estado}
-                                            onChange={handleFormChange}
-                                            maxLength={2}
-                                        />
-                                    </div>
+                                <div className="form-group">
+                                    <label htmlFor="position">Cargo *</label>
+                                    <input
+                                        type="text"
+                                        id="position"
+                                        name="position"
+                                        value={formData.position || ''}
+                                        onChange={handleFormChange}
+                                    />
                                 </div>
-
+                                <div className="form-group">
+                                    <label htmlFor="department">Departamento *</label>
+                                    <input
+                                        type="text"
+                                        id="department"
+                                        name="department"
+                                        value={formData.department || ''}
+                                        onChange={handleFormChange}
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="salary">Salário *</label>
+                                    <input
+                                        type="number"
+                                        id="salary"
+                                        name="salary"
+                                        value={formData.salary || ''}
+                                        onChange={handleFormChange}
+                                    />
+                                </div>
                                 <div className="form-group actions">
-                                    <button
-                                        type="button"
+                                    <button type="button"
                                         className="btn btn-secondary"
-                                        onClick={() => setIsModalOpen(false)}
-                                    >
-                                        Cancelar
+                                        onClick={() => setIsModalOpen(false)}>
+                                            Cancelar
                                     </button>
-
-                                    <button
-                                        type="submit"
-                                        className="btn btn-primary"
-                                    >
+                                    <button 
+                                        type="submit" 
+                                        className="btn btn-primary">
                                         Salvar
                                     </button>
-                                </div>
-                            </form>
-                        </div>
+                             </div>
+                         </form>
                     </div>
                 </div>
-            )}
+            </div>
+        )}
+        {/* Modal para confirmação de exclusão */}
+        {isDeleteModalOpen && (
+            <div className="modal-show" style={{ display: "flex" }}>
+                <div className="modal-content">
+                    <div className="modal-header">
+                        <h2>Confirmar Exclusão</h2>
+                        <button 
+                            className="close-modal" 
+                            onClick={() => setIsDeleteModalOpen(false)}
+                        >
+                        
+                            &times;
+                        </button>
+                    </div>
+                    <div className="modal-body">
 
-            {/* Modal de Confirmação de Exclusão */}
-            {isDeleteModalOpen && (
-                <div className="modal show" style={{ display: "flex" }}>
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h2>Confirmar Exclusão</h2>
+                        <p>Tem certeza que deseja excluir este funcionário?</p>
 
-                            <button
-                                className="close-modal"
+                        <div className="form-group actions">
+                            <button 
+                                type="button"
+                                className="btn btn-secondary"
                                 onClick={() => setIsDeleteModalOpen(false)}
                             >
-                                &times;
+                                Cancelar
                             </button>
-                        </div>
-
-                        <div className="modal-body">
-                            <p>
-                                Tem certeza que deseja excluir este funcionário?
-                            </p>
-
-                            <div className="form-group actions">
-                                <button
-                                    type="button"
-                                    className="btn btn-secondary"
-                                    onClick={() => setIsDeleteModalOpen(false)}
-                                >
-                                    Cancelar
-                                </button>
-
-                                <button
-                                    type="button"
-                                    className="btn btn-danger"
-                                    onClick={executeDelete}
-                                >
-                                    Excluir
-                                </button>
-                            </div>
+                            
+                            <button 
+                                type="button"
+                                className="btn btn-danger"
+                                onClick={executeDelete}
+                            >
+                                Excluir
+                            </button>
                         </div>
                     </div>
                 </div>
-            )}
-        </main>
+            </div>
+        )}
+    </div>
+  );
+};
+
+const SortableHeader: React.FC<{
+    label: string;
+
+    column: SortColumn;
+
+    currentSort: { column: SortColumn; direction: "asc" | "desc" };
+
+    onSort: (column: SortColumn) => void;
+}> = ({ label, column, currentSort, onSort }) => {
+    const isActive = currentSort.column === column;
+
+    return (
+        <th
+            className={`sortable ${isActive ? currentSort.direction : ""}`}
+            onClick={() => onSort(column)}
+            style={{ cursor: "pointer" }}
+        >
+            {label} {isActive && (currentSort.direction === "asc" ? "↑" : "↓")}
+        </th>
     );
-});
+};
 
 export default CadastroFuncionario;
