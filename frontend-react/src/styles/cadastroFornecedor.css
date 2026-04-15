@@ -217,6 +217,12 @@
     background-color: var(--danger-color);
   }
 
+  .suppliers-section {
+    padding: 0 20px 20px 20px;
+    width: 100%;
+    max-width: 100%;
+  }
+
   .table-container {
     background-color: var(--background-white);
     border-radius: var(--border-radius);

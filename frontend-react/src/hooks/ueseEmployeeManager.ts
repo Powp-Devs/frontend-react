@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Employee, SortDirection } from '../types/Employee';
-import { SortColumn } from '@/types/Employee';
-import { set } from 'mobx';
+import { Employee, SortDirection, SortColumn } from '../types/Employee';
 
 const initialEmployees: Employee[] = [
   {

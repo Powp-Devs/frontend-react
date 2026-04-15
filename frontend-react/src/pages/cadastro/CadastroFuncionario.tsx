@@ -1,10 +1,10 @@
-import React, {useState, useEffect, useMemo, FormEvent} from "react";
+import React, {useState, FormEvent} from "react";
 import Header from "@/shared/components/layout/Header";
-import { useEmployeeManager } from "@/hooks/useEmployee";
+import { useEmployeeManager } from "@/hooks/ueseEmployeeManager";
 import { Employee, SortColumn } from "@/types/Employee";
 import "@/styles/cadastroFuncionario.css";
 
-// Íncones
+// Incones
 
 const EditIcon = () => (
     <svg
