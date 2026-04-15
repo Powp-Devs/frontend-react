@@ -216,11 +216,18 @@
   .btn-danger:hover {
     background-color: var(--danger-color);
   }
+  .employee-section {
+    padding: 20px;
+    width: 100%;
+    max-width: 100%;
+}
 
   .table-container {
     background-color: var(--background-white);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-sm);
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color, #eaeaea);
     overflow: hidden;
   }
 
@@ -457,8 +464,8 @@
       width: 100%;
     }
 
-    .suppliers-table th,
-    .suppliers-table td {
+    .employee-table th,
+    .employee-table td {
       padding: var(--spacing-2);
     }
 
