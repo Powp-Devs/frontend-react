@@ -44,7 +44,7 @@ const DeleteIcon = () => (
 
 
 const CadastroFuncionario: React.FC = () => {
-    const { 
+    const {
         employees,
         selectedEmployees,
         searchTerm,
@@ -66,7 +66,7 @@ const CadastroFuncionario: React.FC = () => {
     const [editingId, setEditingId] = useState<number | null>(null);
     const [employeeToDelete, setEmployeeToDelete] = useState<number | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    
+
     const initialFormState: Partial<Employee> = {
         name: "",
         email: "",
@@ -104,7 +104,7 @@ const CadastroFuncionario: React.FC = () => {
             alert("Nome e email são obrigatórios.");
             return;
 
-        } 
+        }
         if (editingId) {
             updateEmployee(editingId, formData);
         } else {
@@ -127,7 +127,7 @@ const CadastroFuncionario: React.FC = () => {
 
     return (
     <div className="app-container">
-        <main className="main-content"> 
+        <main className="main-content">
             <Header />
             <div className="container-header"
                     style={{
@@ -167,11 +167,11 @@ const CadastroFuncionario: React.FC = () => {
                     <table className="employee-table">
                         <thead>
                             <tr>
-                                <th className="checkbox-column">   
-                                    <input type="checkbox" 
+                                <th className="checkbox-column">
+                                    <input type="checkbox"
                                             checked={
                                                 filteredEmployees.length > 0 &&
-                                                selectedEmployees.size === 
+                                                selectedEmployees.size ===
                                                 filteredEmployees.length
                                             }
                                             onChange={() => toggleSelectAll(filteredEmployees)}
@@ -245,14 +245,14 @@ const CadastroFuncionario: React.FC = () => {
                                     <td>{employee.salary.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
 
                                     <td>
-                                        <button className="action-btn edit-btn" 
+                                        <button className="action-btn edit-btn"
                                         onClick={() => openEditEmployeeModal(employee)}
                                         >
                                             <EditIcon />
                                         </button>
                                     </td>
                                     <td>
-                                        <button className="action-btn delete-btn" 
+                                        <button className="action-btn delete-btn"
                                         onClick={() => deleteEmployee(employee.id)}
                                         >
                                             <DeleteIcon />
@@ -262,9 +262,9 @@ const CadastroFuncionario: React.FC = () => {
                             ))}
                             {filteredEmployees.length === 0 && (
                                 <tr>
-                                    <td colSpan={7} 
-                                    style={{ 
-                                        textAlign: "center", 
+                                    <td colSpan={7}
+                                    style={{
+                                        textAlign: "center",
                                         padding: "20px" }}
                                     >
                                         Nenhum funcionário encontrado.
@@ -283,12 +283,12 @@ const CadastroFuncionario: React.FC = () => {
                 <div className="modal-content">
                     <div className="modal-header">
                         <h2>
-                            {editingId 
-                            ? "Editar Funcionário" : 
+                            {editingId
+                            ? "Editar Funcionário" :
                             "Novo Funcionário"}
                         </h2>
-                        <button 
-                            className="close-modal" 
+                        <button
+                            className="close-modal"
                             onClick={() => setIsModalOpen(false)}>
                             &times;
                         </button>
@@ -351,8 +351,8 @@ const CadastroFuncionario: React.FC = () => {
                                         onClick={() => setIsModalOpen(false)}>
                                             Cancelar
                                     </button>
-                                    <button 
-                                        type="submit" 
+                                    <button
+                                        type="submit"
                                         className="btn btn-primary">
                                         Salvar
                                     </button>
@@ -368,11 +368,11 @@ const CadastroFuncionario: React.FC = () => {
                 <div className="modal-content">
                     <div className="modal-header">
                         <h2>Confirmar Exclusão</h2>
-                        <button 
-                            className="close-modal" 
+                        <button
+                            className="close-modal"
                             onClick={() => setIsDeleteModalOpen(false)}
                         >
-                        
+
                             &times;
                         </button>
                     </div>
@@ -381,15 +381,15 @@ const CadastroFuncionario: React.FC = () => {
                         <p>Tem certeza que deseja excluir este funcionário?</p>
 
                         <div className="form-group actions">
-                            <button 
+                            <button
                                 type="button"
                                 className="btn btn-secondary"
                                 onClick={() => setIsDeleteModalOpen(false)}
                             >
                                 Cancelar
                             </button>
-                            
-                            <button 
+
+                            <button
                                 type="button"
                                 className="btn btn-danger"
                                 onClick={executeDelete}
