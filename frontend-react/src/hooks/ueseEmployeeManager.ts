@@ -1,99 +1,110 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Employee, SortDirection, SortColumn } from '../types/Employee';
-
-const initialEmployees: Employee[] = [
-  {
-    id: 11, name: 'Carlos Oliveira', email: 'carlos.oliveira@empresa.com', position: 'Desenvolvedor Front-end', department: 'TI', salary: 5500
-  },
-  {
-    id: 2, name: 'Ana Silva', email: 'ana.silva@empresa.com', position: 'Desenvolvedora Back-end', department: 'TI', salary: 6000
-  },
-  {
-    id: 3, name: 'Álvaro Costa', email: 'alvaro.costa@empresa.com', position: 'Desenvolvedor Full Stack', department: 'TI', salary: 7000
-  },
-  {
-    id: 4, name: 'Zélia Souza', email: 'zelia.souza@empresa.com', position: 'Analista de Sistemas', department: 'TI', salary: 6500
-  },
-  {
-    id: 5, name: 'Beatriz Lima', email: 'beatriz.lima@empresa.com', position: 'Gerente de Projetos', department: 'TI', salary: 8000
-  }
-];
+import { funcionarioService } from '../services/funcionarioService';
 
 export const useEmployeeManager = () => {
-  const [employees, setEmployees] = useState<Employee[]>(() => 
-    {const savedEmployees = localStorage.getItem('employees');
-    if (savedEmployees) {
-      const parsed = JSON.parse(savedEmployees);
-    if (parsed.length > 0) return parsed;
-    }
-    return initialEmployees;
-});
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [selectedEmployees, setSelectedEmployees] = useState<Set<number>>(new Set());
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDepartment, setFilterDepartment] = useState('');
   const [sortConfig, setSortConfig] = useState<{ column: SortColumn; direction: SortDirection }>({
-    column: 'id',
+    column: 'codempregado',
     direction: 'asc'
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
 
+  // Carregar funcionários ao montar
   useEffect(() => {
-    localStorage.setItem('employees', JSON.stringify(employees));
-  }, [employees]);
+    loadEmployees();
+  }, [currentPage]);
 
-  // Funções CRUD 
+  const loadEmployees = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await funcionarioService.listar(currentPage, pageSize);
+      setEmployees(response.empregado);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar funcionários');
+      console.error('Erro ao carregar funcionários:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // adicionar
-  const addEmployee = (employeeData: Omit<Employee, 'id'>) => {
-    const newEmployee: Employee = {
-      ...employeeData,
-      id: Date.now(), 
-    };
+  // Funções CRUD
 
-    setEmployees((prevEmployees) => [...prevEmployees, newEmployee]);
+  // Adicionar
+  const addEmployee = async (employeeData: Omit<Employee, 'codempregado'>) => {
+    try {
+      const newEmployee = await funcionarioService.criar(employeeData);
+      setEmployees((prevEmployees) => [...prevEmployees, newEmployee]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao criar funcionário');
+      console.error('Erro ao criar funcionário:', err);
+      throw err;
+    }
   };
 
   // Atualizar
-  const updateEmployee = (id: number, updatedData: Partial<Employee>) => {
-    setEmployees((prevEmployees) =>
-      prevEmployees.map((emp) => 
-        emp.id === id ? { ...emp, ...updatedData } : emp
-      )
-    );
+  const updateEmployee = async (codempregado: number, updatedData: Partial<Employee>) => {
+    try {
+      await funcionarioService.atualizar(codempregado, updatedData);
+      setEmployees((prevEmployees) =>
+        prevEmployees.map((emp) =>
+          emp.codempregado === codempregado ? { ...emp, ...updatedData } : emp
+        )
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao atualizar funcionário');
+      console.error('Erro ao atualizar funcionário:', err);
+      throw err;
+    }
   };
 
   // Deletar
-  const deleteEmployee = (id: number) => {
-    setEmployees((prevEmployees) => 
-      prevEmployees.filter((emp) => emp.id !== id)
-    );
-    setSelectedEmployees(prev => {
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
+  const deleteEmployee = async (codempregado: number) => {
+    try {
+      await funcionarioService.deletar(codempregado);
+      setEmployees((prevEmployees) =>
+        prevEmployees.filter((emp) => emp.codempregado !== codempregado)
+      );
+      setSelectedEmployees(prev => {
+        const next = new Set(prev);
+        next.delete(codempregado);
+        return next;
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao deletar funcionário');
+      console.error('Erro ao deletar funcionário:', err);
+      throw err;
+    }
   };
 
   // Toggle select (checkbox)
-  const toggleSelection = (id: number) => {
+  const toggleSelection = (codempregado: number) => {
     setSelectedEmployees(prev => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(codempregado)) next.delete(codempregado);
+      else next.add(codempregado);
       return next;
     });
   };
 
-  // Toggle select all 
+  // Toggle select all
   const toggleSelectAll = (displayEmployees: Employee[]) => {
     if (displayEmployees.length === 0) {
       setSelectedEmployees(new Set());
       return;
     }
-    const allSelected = displayEmployees.every(emp => selectedEmployees.has(emp.id));
+    const allSelected = displayEmployees.every(emp => selectedEmployees.has(emp.codempregado));
     if (allSelected) {
       setSelectedEmployees(new Set());
     } else {
-      setSelectedEmployees(new Set(displayEmployees.map(emp => emp.id)));
+      setSelectedEmployees(new Set(displayEmployees.map(emp => emp.codempregado)));
     }
   };
 
@@ -106,17 +117,17 @@ export const useEmployeeManager = () => {
 
   // Exportar CSV
   const exportToCSV = () => {
-    const columns = ['ID', 'Nome', 'E-mail', 'Cargo', 'Departamento', 'Salário'];
+    const columns = ['ID', 'Nome', 'E-mail', 'Cargo', 'CPF', 'Salário'];
     let csvContent = columns.join(',') + '\n';
 
     employees.forEach(employee => {
       const row = [
-        employee.id,
-        `"${employee.name.replace(/"/g, '""')}"`, 
-        `"${employee.email.replace(/"/g, '""')}"`,
-        `"${employee.position.replace(/"/g, '""')}"`,
-        `"${employee.department.replace(/"/g, '""')}"`,
-        employee.salary
+        employee.codempregado,
+        `"${(employee.empregado || '').replace(/"/g, '""')}"`,
+        `"${(employee.email || '').replace(/"/g, '""')}"`,
+        `"${(employee.cargo || '').replace(/"/g, '""')}"`,
+        `"${(employee.cpf || '').replace(/"/g, '""')}"`,
+        employee.salario
       ];
       csvContent += row.join(',') + '\n';
     });
@@ -137,9 +148,10 @@ export const useEmployeeManager = () => {
       const term = searchTerm.toLowerCase();
       result = result.filter(
         s =>
-          s.id.toString().includes(term) ||
-          s.name.toLowerCase().includes(term) ||
-          s.email.toLowerCase().includes(term)
+          s.codempregado.toString().includes(term) ||
+          (s.empregado || '').toLowerCase().includes(term) ||
+          (s.email || '').toLowerCase().includes(term) ||
+          (s.cpf || '').includes(term)
       );
     }
 
@@ -160,14 +172,17 @@ export const useEmployeeManager = () => {
   };
 
   return {
-
     employees,
     selectedEmployees,
     searchTerm,
     filterDepartment,
     sortConfig,
+    loading,
+    error,
+    currentPage,
     setSearchTerm,
     setFilterDepartment,
+    setCurrentPage,
     exportToCSV,
     addEmployee,
     handleSort,
@@ -176,5 +191,6 @@ export const useEmployeeManager = () => {
     toggleSelection,
     toggleSelectAll,
     getProcessedEmployees,
+    loadEmployees,
   };
 };

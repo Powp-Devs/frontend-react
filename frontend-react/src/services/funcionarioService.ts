@@ -1,34 +1,80 @@
 import apiClient from './api';
-import { Funcionario, Response, PaginatedResponse } from '@/types';
+import { Employee } from '@/types/Employee';
+
+/**
+ * Interface de Resposta Padrão do Backend
+ */
+interface ApiResponse<T> {
+  status: number;
+  message?: string;
+  data?: T;
+  success?: boolean;
+}
+
+interface PaginatedResponse<T> {
+  status: number;
+  empregado: T[];
+  endereco: any[];
+  contato: any[];
+  total: number;
+  page: number;
+  per_page: number;
+}
 
 export const funcionarioService = {
-  // Obter todos os funcionários
-  async listar(page = 1, pageSize = 10): Promise<PaginatedResponse<Funcionario>> {
-    return apiClient.get(`/funcionarios?page=${page}&pageSize=${pageSize}`);
+  /**
+   * Obtém lista paginada de empregados
+   */
+  async listar(page = 1, pageSize = 10): Promise<PaginatedResponse<Employee>> {
+    const response = await apiClient.get<PaginatedResponse<Employee>>('/empregados', {
+      params: { page, page_size: pageSize }
+    });
+    return response;
   },
 
-  // Obter funcionário por ID
-  async obter(id: number): Promise<Response<Funcionario>> {
-    return apiClient.get(`/funcionarios/${id}`);
+  /**
+   * Obtém um empregado específico pelo ID
+   */
+  async obter(codempregado: number): Promise<Employee> {
+    const response = await apiClient.get<ApiResponse<Employee>>(`/empregados/${codempregado}`);
+    return response.data as Employee;
   },
 
-  // Criar novo funcionário
-  async criar(funcionario: Omit<Funcionario, 'id'>): Promise<Response<Funcionario>> {
-    return apiClient.post('/funcionarios', funcionario);
+  /**
+   * Cria um novo empregado
+   */
+  async criar(funcionario: Omit<Employee, 'codempregado'>): Promise<Employee> {
+    const response = await apiClient.post<ApiResponse<Employee>>('/empregados/cadastrar', funcionario);
+    return response.data as Employee;
   },
 
-  // Atualizar funcionário
-  async atualizar(id: number, funcionario: Partial<Funcionario>): Promise<Response<Funcionario>> {
-    return apiClient.put(`/funcionarios/${id}`, funcionario);
+  /**
+   * Atualiza dados parciais de um empregado
+   * Nota: Backend ainda não tem PUT implementado, usar criar para agora
+   */
+  async atualizar(codempregado: number, funcionario: Partial<Employee>): Promise<Employee> {
+    // TODO: Implementar PUT no backend
+    throw new Error('Método de atualização ainda não implementado no backend');
   },
 
-  // Deletar funcionário
-  async deletar(id: number): Promise<Response<void>> {
-    return apiClient.delete(`/funcionarios/${id}`);
+  /**
+   * Remove um registro do banco de dados
+   */
+  async deletar(codempregado: number): Promise<void> {
+    await apiClient.delete(`/empregados/${codempregado}`);
   },
 
-  // Buscar funcionários por texto
-  async buscar(termo: string): Promise<Response<Funcionario[]>> {
-    return apiClient.get(`/funcionarios/buscar?termo=${termo}`);
-  },
+  /**
+   * Busca funcionários por termo (Query Search)
+   * TODO: Implementar busca no backend
+   */
+  async buscar(termo: string): Promise<Employee[]> {
+    // Por enquanto, faz GET de todos e filtra no frontend
+    const response = await this.listar(1, 100);
+    return response.empregado.filter(emp =>
+      emp.empregado.toLowerCase().includes(termo.toLowerCase()) ||
+      emp.cpf.includes(termo) ||
+      emp.email?.toLowerCase().includes(termo.toLowerCase())
+    );
+  }
 };

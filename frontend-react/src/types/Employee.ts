@@ -1,10 +1,36 @@
 export interface Employee {
-  id: number;
-  name: string;
-  email: string;
-  position: string;
-  department: string;
-  salary: number;
+  // Campos PWEMPREGADO
+  codempregado: number;
+  empregado: string;
+  cpf: string;
+  rg?: string;
+  data_nascimento: string;
+  data_admissao: string;
+  data_demissao?: string;
+  email_corporativo?: string;
+  obs?: string;
+  bloqueio?: string;
+  motivo_bloq?: string;
+  cargo?: string;
+  salario: number;
+  codsetor: number;
+  codendereco?: number;
+  codtelefone?: number;
+
+  // Campos PWENDERECO (quando retornados da API)
+  cep?: string;
+  logradouro?: string;
+  numero?: string;
+  bairro?: string;
+  cidade?: string;
+  uf?: string;
+  pais?: string;
+
+  // Campos PWCONTATO (quando retornados da API)
+  telefone?: string;
+  celular?: string;
+  email?: string;
+  email2?: string;
 }
 
 export type SortDirection = 'asc' | 'desc';

@@ -4,7 +4,7 @@ import { useEmployeeManager } from "@/hooks/ueseEmployeeManager";
 import { Employee, SortColumn } from "@/types/Employee";
 import "@/styles/cadastroFuncionario.css";
 
-// Incones
+// Icons
 
 const EditIcon = () => (
     <svg
@@ -49,9 +49,9 @@ const CadastroFuncionario: React.FC = () => {
         selectedEmployees,
         searchTerm,
         sortConfig,
-        filterDepartment,
+        loading,
+        error,
         setSearchTerm,
-        setFilterDepartment,
         exportToCSV,
         addEmployee,
         updateEmployee,
@@ -66,62 +66,113 @@ const CadastroFuncionario: React.FC = () => {
     const [editingId, setEditingId] = useState<number | null>(null);
     const [employeeToDelete, setEmployeeToDelete] = useState<number | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
 
     const initialFormState: Partial<Employee> = {
-        name: "",
+        empregado: "",
+        cpf: "",
         email: "",
-        position: "",
-        department: "",
+        cargo: "",
+        salario: 0,
+        codsetor: 1,
+        data_nascimento: "",
+        data_admissao: new Date().toISOString().split('T')[0],
+        cep: "",
+        logradouro: "",
+        bairro: "",
+        cidade: "",
+        uf: "",
+        celular: "",
     };
 
     const [formData, setFormData] = useState<Partial<Employee>>(initialFormState);
 
     const filteredEmployees = getProcessedEmployees(searchTerm);
 
-    // Funções para abrir handlers do modal
+    // Functions para abrir handlers do modal
     const openNewEmployeeModal = () => {
         setFormData(initialFormState);
         setEditingId(null);
+        setSubmitError(null);
         setIsModalOpen(true);
     };
 
     const openEditEmployeeModal = (employee: Employee) => {
         setFormData(employee);
-        setEditingId(employee.id);
+        setEditingId(employee.codempregado);
+        setSubmitError(null);
         setIsModalOpen(true);
     };
 
     const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, type } = e.target;
-
-        setFormData((prev) => ({ ...prev, [name]: type === "number" ? Number(value) : value }));
+        setFormData((prev) => ({
+            ...prev,
+            [name]: type === "number" ? (value ? Number(value) : 0) : value
+        }));
     };
 
-    const handleFormSubmit = (e: FormEvent) => {
+    const handleFormSubmit = async (e: FormEvent) => {
         e.preventDefault();
+        setSubmitError(null);
 
-        if (!formData.name || !formData.email) {
-            alert("Nome e email são obrigatórios.");
+        // Validar campos obrigatórios conforme backend schema
+        if (!formData.empregado || !formData.cpf || !formData.email || !formData.cargo || !formData.data_nascimento || !formData.data_admissao) {
+            setSubmitError("Preencha todos os campos obrigatórios (Nome, CPF, Email, Cargo, Data Nascimento, Data Admissão).");
             return;
+        }
 
+        if (!formData.cep || !formData.logradouro || !formData.bairro || !formData.cidade) {
+            setSubmitError("Preencha todos os dados de endereço.");
+            return;
         }
-        if (editingId) {
-            updateEmployee(editingId, formData);
-        } else {
-            addEmployee(formData as any);
+
+        if (formData.salario && formData.salario <= 0) {
+            setSubmitError("O salário deve ser maior que zero.");
+            return;
         }
-        setIsModalOpen(false);
+
+        setIsSubmitting(true);
+        try {
+            // Preparar dados para envio (incluir email_corporativo igual email)
+            const dataToSend = {
+                ...formData,
+                email_corporativo: formData.email,
+                // Garantir que os campos opcionais que não foram preenchidos sejam enviados
+            };
+            
+            if (editingId) {
+                // Para update, precisamos implementar no backend primeiro
+                alert("Atualização ainda não implementada no backend. Apenas criar e deletar funcionam.");
+                // await updateEmployee(editingId, dataToSend);
+            } else {
+                await addEmployee(dataToSend as any);
+            }
+            setIsModalOpen(false);
+            setFormData(initialFormState);
+        } catch (err) {
+            setSubmitError(err instanceof Error ? err.message : 'Erro ao salvar funcionário');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
-    // Funções para abrir handlers de delete
-    const comfirmDelete = (id: number) => {
-        setEmployeeToDelete(id);
+
+    // Functions para abrir handlers de delete
+    const confirmDelete = (codempregado: number) => {
+        setEmployeeToDelete(codempregado);
         setIsDeleteModalOpen(true);
     };
-    const executeDelete = () => {
+
+    const executeDelete = async () => {
         if (employeeToDelete) {
-            deleteEmployee(employeeToDelete);
-            setIsDeleteModalOpen(false);
-            setEmployeeToDelete(null);
+            try {
+                await deleteEmployee(employeeToDelete);
+                setIsDeleteModalOpen(false);
+                setEmployeeToDelete(null);
+            } catch (err) {
+                alert(err instanceof Error ? err.message : 'Erro ao deletar funcionário');
+            }
         }
     };
 
@@ -140,7 +191,7 @@ const CadastroFuncionario: React.FC = () => {
                 <div className="search-container">
                     <input
                     type="text"
-                    placeholder="Pesquisar"
+                    placeholder="Pesquisar por nome, CPF ou email"
                     className="search-input"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -151,16 +202,21 @@ const CadastroFuncionario: React.FC = () => {
                 >
                     <button className="btn btn-outline"
                         onClick={exportToCSV}
+                        disabled={loading}
                     >
                         Exportar
                     </button>
                     <button className="btn btn-primary"
                         onClick={openNewEmployeeModal}
+                        disabled={loading}
                     >
                         Novo Funcionário
                     </button>
                     </div>
             </div>
+
+            {loading && <div style={{padding: "20px", textAlign: "center"}}>Carregando...</div>}
+            {error && <div style={{padding: "20px", color: "red", textAlign: "center"}}>Erro: {error}</div>}
 
             <section className="employee-section">
                 <div className="table-container">
@@ -179,13 +235,19 @@ const CadastroFuncionario: React.FC = () => {
                                 </th>
                                 <SortableHeader
                                     label="cod. Func."
-                                    column="id"
+                                    column="codempregado"
                                     currentSort={sortConfig}
                                     onSort={handleSort}
                                 />
                                 <SortableHeader
                                     label="Nome"
-                                    column="name"
+                                    column="empregado"
+                                    currentSort={sortConfig}
+                                    onSort={handleSort}
+                                />
+                                <SortableHeader
+                                    label="CPF"
+                                    column="cpf"
                                     currentSort={sortConfig}
                                     onSort={handleSort}
                                 />
@@ -197,72 +259,61 @@ const CadastroFuncionario: React.FC = () => {
                                 />
                                 <SortableHeader
                                     label="Cargo"
-                                    column="position"
-                                    currentSort={sortConfig}
-                                    onSort={handleSort}
-                                />
-                                <SortableHeader
-                                    label="Departamento"
-                                    column="department"
+                                    column="cargo"
                                     currentSort={sortConfig}
                                     onSort={handleSort}
                                 />
                                 <SortableHeader
                                     label="Salário"
-                                    column="salary"
+                                    column="salario"
                                     currentSort={sortConfig}
                                     onSort={handleSort}
                                 />
-                                <th>Edit</th>
-
-                                <th>Delete</th>
+                                <th>Editar</th>
+                                <th>Deletar</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filteredEmployees.map((employee) => (
-                                <tr key={employee.id}>
+                                <tr key={employee.codempregado}>
                                     <td className="checkbox-column">
                                         <input
                                             type="checkbox"
                                             checked={selectedEmployees.has(
-                                                employee.id
+                                                employee.codempregado
                                             )}
                                             onChange={() =>
-                                                toggleSelection(employee.id)
+                                                toggleSelection(employee.codempregado)
                                             }
                                         />
                                     </td>
-                                    <td>{employee.id}</td>
-
-                                    <td>{employee.name}</td>
-
-                                    <td>{employee.email}</td>
-
-                                    <td>{employee.position}</td>
-
-                                    <td>{employee.department}</td>
-
-                                    <td>{employee.salary.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-
+                                    <td>{employee.codempregado}</td>
+                                    <td>{employee.empregado}</td>
+                                    <td>{employee.cpf}</td>
+                                    <td>{employee.email || employee.email_corporativo}</td>
+                                    <td>{employee.cargo}</td>
+                                    <td>{employee.salario.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                                     <td>
                                         <button className="action-btn edit-btn"
                                         onClick={() => openEditEmployeeModal(employee)}
+                                        title="Editar"
                                         >
                                             <EditIcon />
                                         </button>
                                     </td>
                                     <td>
                                         <button className="action-btn delete-btn"
-                                        onClick={() => deleteEmployee(employee.id)}
+                                        onClick={() => confirmDelete(employee.codempregado)}
+                                        title="Deletar"
                                         >
                                             <DeleteIcon />
                                         </button>
                                     </td>
                                 </tr>
                             ))}
-                            {filteredEmployees.length === 0 && (
+                            {filteredEmployees.length === 0 && !loading && (
                                 <tr>
-                                    <td colSpan={7}
+                                    <td colSpan={9}
                                     style={{
                                         textAlign: "center",
                                         padding: "20px" }}
@@ -276,8 +327,8 @@ const CadastroFuncionario: React.FC = () => {
                 </div>
             </section>
         </main>
-        {/* Modals */}
 
+        {/* Modal para criar/editar funcionário */}
         {isModalOpen && (
             <div className="modal-show" style={{ display: "flex" }}>
                 <div className="modal-content">
@@ -293,75 +344,171 @@ const CadastroFuncionario: React.FC = () => {
                             &times;
                         </button>
                     </div>
-                        <div className="modal-body">
-                            <form onSubmit={handleFormSubmit}>
-                                <div className="form-group">
-                                    <label>Nome *</label>
-                                    <input
-                                        type="text"
-                                        id="name"
-                                        name="name"
-                                        value={formData.name || ''}
-                                        onChange={handleFormChange}
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label htmlFor="email">Email</label>
-                                    <input
-                                        type="email"
-                                        id="email"
-                                        name="email"
-                                        value={formData.email || ''}
-                                        onChange={handleFormChange}
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label htmlFor="position">Cargo *</label>
-                                    <input
-                                        type="text"
-                                        id="position"
-                                        name="position"
-                                        value={formData.position || ''}
-                                        onChange={handleFormChange}
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label htmlFor="department">Departamento *</label>
-                                    <input
-                                        type="text"
-                                        id="department"
-                                        name="department"
-                                        value={formData.department || ''}
-                                        onChange={handleFormChange}
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label htmlFor="salary">Salário *</label>
-                                    <input
-                                        type="number"
-                                        id="salary"
-                                        name="salary"
-                                        value={formData.salary || ''}
-                                        onChange={handleFormChange}
-                                    />
-                                </div>
-                                <div className="form-group actions">
-                                    <button type="button"
-                                        className="btn btn-secondary"
-                                        onClick={() => setIsModalOpen(false)}>
-                                            Cancelar
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="btn btn-primary">
-                                        Salvar
-                                    </button>
-                             </div>
-                         </form>
+                    <div className="modal-body">
+                        {submitError && <div style={{color: "red", marginBottom: "10px"}}>{submitError}</div>}
+                        <form onSubmit={handleFormSubmit}>
+                            <div className="form-group">
+                                <label>Nome *</label>
+                                <input
+                                    type="text"
+                                    id="empregado"
+                                    name="empregado"
+                                    value={formData.empregado || ''}
+                                    onChange={handleFormChange}
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>CPF *</label>
+                                <input
+                                    type="text"
+                                    id="cpf"
+                                    name="cpf"
+                                    value={formData.cpf || ''}
+                                    onChange={handleFormChange}
+                                    placeholder="000.000.000-00"
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Email *</label>
+                                <input
+                                    type="email"
+                                    id="email"
+                                    name="email"
+                                    value={formData.email || ''}
+                                    onChange={handleFormChange}
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Celular</label>
+                                <input
+                                    type="text"
+                                    id="celular"
+                                    name="celular"
+                                    value={formData.celular || ''}
+                                    onChange={handleFormChange}
+                                    placeholder="(11) 99999-9999"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Cargo *</label>
+                                <input
+                                    type="text"
+                                    id="cargo"
+                                    name="cargo"
+                                    value={formData.cargo || ''}
+                                    onChange={handleFormChange}
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Salário *</label>
+                                <input
+                                    type="number"
+                                    id="salario"
+                                    name="salario"
+                                    value={formData.salario || ''}
+                                    onChange={handleFormChange}
+                                    step="0.01"
+                                    min="0"
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Data de Nascimento</label>
+                                <input
+                                    type="date"
+                                    id="data_nascimento"
+                                    name="data_nascimento"
+                                    value={formData.data_nascimento || ''}
+                                    onChange={handleFormChange}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Data de Admissão</label>
+                                <input
+                                    type="date"
+                                    id="data_admissao"
+                                    name="data_admissao"
+                                    value={formData.data_admissao || ''}
+                                    onChange={handleFormChange}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>CEP</label>
+                                <input
+                                    type="text"
+                                    id="cep"
+                                    name="cep"
+                                    value={formData.cep || ''}
+                                    onChange={handleFormChange}
+                                    placeholder="00000-000"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Logradouro</label>
+                                <input
+                                    type="text"
+                                    id="logradouro"
+                                    name="logradouro"
+                                    value={formData.logradouro || ''}
+                                    onChange={handleFormChange}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Bairro</label>
+                                <input
+                                    type="text"
+                                    id="bairro"
+                                    name="bairro"
+                                    value={formData.bairro || ''}
+                                    onChange={handleFormChange}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Cidade</label>
+                                <input
+                                    type="text"
+                                    id="cidade"
+                                    name="cidade"
+                                    value={formData.cidade || ''}
+                                    onChange={handleFormChange}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>UF</label>
+                                <input
+                                    type="text"
+                                    id="uf"
+                                    name="uf"
+                                    value={formData.uf || ''}
+                                    onChange={handleFormChange}
+                                    placeholder="SP"
+                                    maxLength={2}
+                                />
+                            </div>
+                            <div className="form-group actions">
+                                <button type="button"
+                                    className="btn btn-secondary"
+                                    onClick={() => setIsModalOpen(false)}
+                                    disabled={isSubmitting}>
+                                        Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="btn btn-primary"
+                                    disabled={isSubmitting}>
+                                    {isSubmitting ? 'Salvando...' : 'Salvar'}
+                                </button>
+                         </div>
+                     </form>
                     </div>
                 </div>
             </div>
         )}
+
         {/* Modal para confirmação de exclusão */}
         {isDeleteModalOpen && (
             <div className="modal-show" style={{ display: "flex" }}>
@@ -372,14 +519,11 @@ const CadastroFuncionario: React.FC = () => {
                             className="close-modal"
                             onClick={() => setIsDeleteModalOpen(false)}
                         >
-
                             &times;
                         </button>
                     </div>
                     <div className="modal-body">
-
                         <p>Tem certeza que deseja excluir este funcionário?</p>
-
                         <div className="form-group actions">
                             <button
                                 type="button"
@@ -388,7 +532,6 @@ const CadastroFuncionario: React.FC = () => {
                             >
                                 Cancelar
                             </button>
-
                             <button
                                 type="button"
                                 className="btn btn-danger"
@@ -407,11 +550,8 @@ const CadastroFuncionario: React.FC = () => {
 
 const SortableHeader: React.FC<{
     label: string;
-
     column: SortColumn;
-
     currentSort: { column: SortColumn; direction: "asc" | "desc" };
-
     onSort: (column: SortColumn) => void;
 }> = ({ label, column, currentSort, onSort }) => {
     const isActive = currentSort.column === column;
