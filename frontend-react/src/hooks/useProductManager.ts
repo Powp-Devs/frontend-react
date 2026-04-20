@@ -4,38 +4,78 @@ import { Product, SortDirection, SortColumn} from '../types/Product';
 const initialProducts: Product[] = [
   {
     id: 1, 
-    name: 'Notebook Pro', 
-    description: 'Notebook de alta performance para desenvolvedores.', 
-    price: 7500.0, 
-    imageUrl: 'https://exemplo.com/img/notebook.jpg'
+    produto: 'Notebook Pro', 
+    obs: 'Notebook de alta performance para desenvolvedores.',
+    embalagem: 'Caixa',
+    sku: 'NP-001', 
+    unidade: 'un', 
+    gtin: '1234567890123', 
+    ean: '1234567890123', 
+    status: 'A', 
+    codfornecedor: 1001,
+    custo: 5000.0,
+    preco_venda: 7500.0,
+    margem: 0.33
   },
   {
     id: 2, 
-    name: 'Teclado Mecânico', 
-    description: 'Teclado mecânico switch brown com LED RGB.', 
-    price: 450.0, 
-    imageUrl: 'https://exemplo.com/img/teclado.jpg'
+    produto: 'Teclado Mecânico', 
+    obs: 'Teclado mecânico switch brown com LED RGB.', 
+    embalagem: 'Caixa',
+    sku: 'TM-001', 
+    unidade: 'un', 
+    gtin: '1234567890124', 
+    ean: '1234567890124', 
+    status: 'A', 
+    codfornecedor: 1002,
+    custo: 200.0,
+    preco_venda: 450.0,
+    margem: 0.56
   },
   {
     id: 3, 
-    name: 'Monitor UltraWide', 
-    description: 'Monitor 34 polegadas WQHD para máxima produtividade.', 
-    price: 2500.0, 
-    imageUrl: 'https://exemplo.com/img/monitor.jpg'
+    produto: 'Monitor UltraWide', 
+    obs: 'Monitor 34 polegadas WQHD para máxima produtividade.', 
+    embalagem: 'Caixa',
+    sku: 'MU-001', 
+    unidade: 'un', 
+    gtin: '1234567890125', 
+    ean: '1234567890125', 
+    status: 'A', 
+    codfornecedor: 1003,
+    custo: 1500.0,
+    preco_venda: 2500.0,
+    margem: 0.4,
   },
   {
-    id: 4, 
-    name: 'Mouse Wireless', 
-    description: 'Mouse ergonômico sem fio com bateria de longa duração.', 
-    price: 299.9, 
-    imageUrl: 'https://exemplo.com/img/mouse.jpg'
+    id: 4,
+    produto: 'Mouse Wireless',
+    obs: 'Mouse ergonômico sem fio com bateria de longa duração.',
+    embalagem: 'Caixa',
+    sku: 'MW-001',
+    unidade: 'un',
+    gtin: '1234567890126',
+    ean: '1234567890126',
+    status: 'A',
+    codfornecedor: 1004,
+    custo: 299.9,
+    preco_venda: 299.9,
+    margem: 0.0
   },
   {
-    id: 5, 
-    name: 'Headset Noise Cancelling', 
-    description: 'Headset com cancelamento de ruído ativo.', 
-    price: 890.0, 
-    imageUrl: 'https://exemplo.com/img/headset.jpg'
+    id: 5,
+    produto: 'Headset Noise Cancelling',
+    obs: 'Headset com cancelamento de ruído ativo.',
+    embalagem: 'Caixa',
+    sku: 'HN-001',
+    unidade: 'un',
+    gtin: '1234567890127',
+    ean: '1234567890127',
+    status: 'A',
+    codfornecedor: 1005,
+    custo: 890.0,
+    preco_venda: 890.0,
+    margem: 0.0
   }
 ];
 
@@ -128,16 +168,15 @@ export const useProductManager = () => {
 
   // --- Exportar CSV ---
   const exportToCSV = () => {
-    const columns = ['ID', 'Nome', 'Descrição', 'Preço', 'URL da Imagem'];
+    const columns = ['CodFornecedor', 'Produto', 'Observação', 'Preço de Venda'];
     let csvContent = columns.join(',') + '\n';
 
     products.forEach(product => {
       const row = [
         product.id,
-        `"${product.name.replace(/"/g, '""')}"`, 
-        `"${product.description.replace(/"/g, '""')}"`,
-        product.price,
-        `"${product.imageUrl.replace(/"/g, '""')}"`
+        `"${product.produto.replace(/"/g, '""')}"`, 
+        `"${product.obs.replace(/"/g, '""')}"`,
+        product.preco_venda,
       ];
       csvContent += row.join(',') + '\n';
     });
@@ -157,8 +196,8 @@ export const useProductManager = () => {
         const term = searchTerm.toLowerCase();
         result = result.filter(
             prod => 
-            prod.name.toLowerCase().includes(term) || 
-            prod.description.toLowerCase().includes(term)
+            prod.produto.toLowerCase().includes(term) || 
+            prod.obs.toLowerCase().includes(term)
         );
     }
         result.sort((a, b) => {
