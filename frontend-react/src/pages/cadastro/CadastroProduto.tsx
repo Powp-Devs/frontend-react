@@ -1,4 +1,4 @@
-import React, {useState, FormEvent} from "react";
+import React, {useState, FormEvent, useEffect} from "react";
 import Header from "@/shared/components/layout/Header";
 import {useProductManager} from "@/hooks/useProductManager";
 import {Product, SortColumn } from "@/types/Product";
@@ -63,10 +63,15 @@ const CadastroProduto: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const initialFormState: Partial<Product> = {
-        name: "",
-        description: "",
-        price: 0,
-        imageUrl: "",
+        produto: "",
+        obs: "",
+        embalagem: "",
+        sku: "",
+        ean: "",
+        status: "A",
+        custo: 0,
+        preco_venda: 0,
+        margem: 0,
     };
 
     const [formData, setFormData] = useState<Partial<Product>>(initialFormState);
@@ -86,19 +91,24 @@ const CadastroProduto: React.FC = () => {
         setIsModalOpen(true);
     };
 
-    const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value, type } = e.target;
+        let valorTratado: string | number = value;
+
+        if (type === 'number' || name === 'custo' || name === 'preco_venda') {
+            valorTratado = value === '' ? 0 : Number(value.replace(',', '.'));
+  }
 
         setFormData((prev) => ({
             ...prev,
-            [name]: type === "number" ? Number(value) : value,
+            [name]: valorTratado
         }));
     };
 
     const handleFormSubmit = (e: FormEvent) => {
         e.preventDefault();
 
-        if (!formData.name || !formData.price) {
+        if (!formData.produto || !formData.preco_venda) {
             alert("Nome e preço são obrigatórios.");
             return;
         }
@@ -124,6 +134,27 @@ const CadastroProduto: React.FC = () => {
             setProductToDelete(null);
         }
     };
+    useEffect(() => {
+    // Pegamos os valores ou assumimos 0 se estiverem vazios
+        const custo = formData.custo || 0;
+        const preco = formData.preco_venda || 0;
+
+        if (custo > 0 && preco > 0) {
+            const lucro = preco - custo;
+            const porcentagemMargem = (lucro / preco) * 100;
+
+        setFormData(prevData => ({
+            ...prevData,
+            margem: parseFloat(porcentagemMargem.toFixed(2))
+        }));
+    }
+}, [formData.custo, formData.preco_venda]);
+
+    const listaFornecedores = [
+    { id: 15, nome: "Fornecedor De Hardware" },
+    { id: 8, nome: "Distribuidora ABC" },
+    { id: 42, nome: "Frios e Cia" }
+    ];
 
     return (
         <div className="app-container">
@@ -185,32 +216,26 @@ const CadastroProduto: React.FC = () => {
                                         />
                                     </th>
                                     <SortableHeader
-                                        label="Cod. Produto"
+                                        label="Cod. Fornecedor"
                                         column="id"
                                         currentSort={sortConfig}
                                         onSort={handleSort}
                                     />
                                     <SortableHeader
-                                        label="Nome"
-                                        column="name"
+                                        label="Produto"
+                                        column="produto"
                                         currentSort={sortConfig}
                                         onSort={handleSort}
                                     />
                                     <SortableHeader
-                                        label="Descrição"
-                                        column="description"
+                                        label="Observação"
+                                        column="obs"
                                         currentSort={sortConfig}
                                         onSort={handleSort}
                                     />
                                     <SortableHeader
-                                        label="Preço"
-                                        column="price"
-                                        currentSort={sortConfig}
-                                        onSort={handleSort}
-                                    />
-                                    <SortableHeader
-                                        label="URL da Imagem"
-                                        column="imageUrl"
+                                        label="Preço de Venda"
+                                        column="preco_venda"
                                         currentSort={sortConfig}
                                         onSort={handleSort}
                                     />
@@ -233,21 +258,16 @@ const CadastroProduto: React.FC = () => {
                                             />
                                         </td>
                                         <td>{product.id}</td>
-                                        <td>{product.name}</td>
-                                        <td>{product.description}</td>
+                                        <td>{product.produto}</td>
+                                        <td>{product.obs}</td>
                                         <td>
-                                            {product.price.toLocaleString(
+                                            {product.preco_venda?.toLocaleString(
                                                 "pt-BR",
                                                 {
-                                                    style: "currency",
+                                                    style: "currency", 
                                                     currency: "BRL",
                                                 }
-                                            )}
-                                        </td>
-                                        <td>
-                                            <a href={product.imageUrl} target="_blank" rel="noopener noreferrer">
-                                                Ver Imagem
-                                            </a>
+                                            ) || "R$ 0,00"}
                                         </td>
                                         <td>
                                             <button
@@ -273,13 +293,7 @@ const CadastroProduto: React.FC = () => {
                                 ))}
                                 {filteredProducts.length === 0 && (
                                     <tr>
-                                        <td
-                                            colSpan={8}
-                                            style={{
-                                                textAlign: "center",
-                                                padding: "20px",
-                                            }}
-                                        >
+                                        <td colSpan={7}>
                                             Nenhum produto encontrado.
                                         </td>
                                     </tr>
@@ -310,46 +324,149 @@ const CadastroProduto: React.FC = () => {
                         <div className="modal-body">
                             <form onSubmit={handleFormSubmit}>
                                 <div className="form-group">
-                                    <label htmlFor="name">Nome *</label>
+                                    <label htmlFor="produto">Produto *</label>
                                     <input
                                         type="text"
-                                        id="name"
-                                        name="name"
-                                        value={formData.name || ""}
+                                        id="produto"
+                                        name="produto"
+                                        value={formData.produto || ""}
                                         onChange={handleFormChange}
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label htmlFor="description">Descrição</label>
+                                    <label htmlFor="observacao">Observação</label>
                                     <input
                                         type="text"
-                                        id="description"
-                                        name="description"
-                                        value={formData.description || ""}
+                                        id="observacao"
+                                        name="obs"
+                                        value={formData.obs || " "}
                                         onChange={handleFormChange}
                                     />
                                 </div>
+
                                 <div className="form-group">
-                                    <label htmlFor="price">Preço *</label>
+                                    <label htmlFor="embalagem">Embalagem *</label>
+                                    <input
+                                        type="text"
+                                        id="embalagem"
+                                        name="embalagem"
+                                        value={formData.embalagem || ""}
+                                        onChange={handleFormChange}
+                                    />
+                                </div>   
+                                <div className="form-group">
+                                    <label htmlFor="sku">SKU *</label>
+                                    <input
+                                        type="text"
+                                        id="sku"
+                                        name="sku"
+                                        value={formData.sku || ""}
+                                        onChange={handleFormChange}
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label htmlFor="unidade">Unidade *</label>
+                                    <input
+                                        type="text"
+                                        id="unidade"
+                                        name="unidade"
+                                        value={formData.unidade || ""}
+                                        onChange={handleFormChange}
+                                    />
+                                </div>      
+
+                                <div className="form-group">
+                                    <label htmlFor="gtin">GTIN *</label>
+                                    <input
+                                        type="text"
+                                        id="gtin"
+                                        name="gtin"
+                                        value={formData.gtin || ""}
+                                        onChange={handleFormChange}
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label htmlFor="ean">EAN *</label>
+                                    <input
+                                        type="text"
+                                        id="ean"
+                                        name="ean"
+                                        value={formData.ean || ""}
+                                        onChange={handleFormChange}
+                                    />
+                                </div>
+                                <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <input
+                                        type="checkbox"
+                                        id="status"
+                                        name="status"
+                                        checked={formData.status === 'A'} 
+                                        
+                                        onChange={(event) => {
+                                            setFormData(prevData => ({
+                                                ...prevData,
+                                                status: event.target.checked ? 'A' : 'I'
+                                            }));
+                                        }}
+                                    />
+                                    <label htmlFor="status" style={{ margin: 0, cursor: 'pointer' }}>
+                                        Produto Ativo
+                                    </label>
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="codfornecedor">Fornecedor *</label>
+                                    <select
+                                        id="codfornecedor"
+                                        name="codfornecedor" 
+                                        value={formData.codfornecedor || ""} 
+                                        onChange={handleFormChange}
+                                    >
+                                        <option value="" disabled>Selecione um fornecedor...</option>
+                                        
+                                        {listaFornecedores.map((fornecedor) => (
+                                            <option key={fornecedor.id} value={fornecedor.id}>
+                                                {fornecedor.nome}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="custo">Custo *</label>
+                                    <input
+                                        type="text"
+                                        id="custo"
+                                        name="custo"
+                                        value={formData.custo || ""}
+                                        onChange={handleFormChange}
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label htmlFor="preco_venda">Preço *</label>
                                     <input
                                         type="number"
                                         step="0.01"
-                                        id="price"
-                                        name="price"
-                                        value={formData.price || ""}
+                                        id="preco_venda"
+                                        name="preco_venda"
+                                        value={formData.preco_venda || ""}
                                         onChange={handleFormChange}
                                     />
                                 </div>
+                                
                                 <div className="form-group">
-                                    <label htmlFor="imageUrl">URL da Imagem</label>
+                                    <label htmlFor="margem">Margem de Lucro (%)</label>
                                     <input
-                                        type="text"
-                                        id="imageUrl"
-                                        name="imageUrl"
-                                        value={formData.imageUrl || ""}
-                                        onChange={handleFormChange}
+                                        type="number"
+                                        id="margem"
+                                        name="margem"
+                                        value={formData.margem || 0}
+                                        readOnly 
+                                        className="input-bloqueado" 
                                     />
                                 </div>
+
                                 <div className="form-group actions">
                                     <button
                                         type="button"
