@@ -21,6 +21,54 @@ interface PaginatedResponse<T> {
   per_page: number;
 }
 
+/**
+ * Normaliza dados da API para o padrão esperado pelo formulário
+ * A API retorna dados aninhados em "endereco" e "contato"
+ */
+function normalizeEmployeeData(data: any): Employee {
+  // Extrair dados de endereço (vêm aninhados em data.endereco)
+  const endereco = data.endereco || {};
+  // Extrair dados de contato (vêm aninhados em data.contato)
+  const contato = data.contato || {};
+  
+  return {
+    // Campos do empregado
+    codempregado: data.codempregado,
+    empregado: data.empregado || '',
+    cpf: data.cpf || '',
+    rg: data.rg || '',
+    data_nascimento: data.data_nascimento || '',
+    data_admissao: data.data_admissao || '',
+    data_demissao: data.data_demissao,
+    email_corporativo: data.email_corporativo || '',
+    obs: data.obs || '',
+    bloqueio: data.bloqueio || '',
+    motivo_bloq: data.motivo_bloq || '',
+    cargo: data.cargo || '',
+    salario: data.salario || 0,
+    codsetor: data.codsetor || 1,
+    codendereco: data.codendereco,
+    codtelefone: data.codtelefone,
+    codcontato: data.codtelefone, // Manter compatibilidade com backend
+    
+    // Campos de endereço (extraídos do objeto aninhado "endereco")
+    cep: endereco.cep || '',
+    logradouro: endereco.logradouro || '',
+    numero: endereco.numero?.toString() || '',
+    bairro: endereco.bairro || '',
+    cidade: endereco.cidade || '',
+    uf: endereco.uf || '',
+    pais: endereco.pais || '',
+    
+    // Campos de contato (extraídos do objeto aninhado "contato")
+    // Priorizar email do contato sobre email corporativo
+    email: contato.email || data.email || data.email_corporativo || '',
+    email2: contato.email2 || '',
+    telefone: contato.telefone || '',
+    celular: contato.celular || '',
+  };
+}
+
 export const funcionarioService = {
   /**
    * Obtém lista paginada de empregados
@@ -37,7 +85,7 @@ export const funcionarioService = {
    */
   async obter(codempregado: number): Promise<Employee> {
     const response = await apiClient.get<ApiResponse<Employee>>(`/empregados/${codempregado}`);
-    return response.data as Employee;
+    return normalizeEmployeeData(response.data);
   },
 
   /**
@@ -50,11 +98,45 @@ export const funcionarioService = {
 
   /**
    * Atualiza dados parciais de um empregado
-   * Nota: Backend ainda não tem PUT implementado, usar criar para agora
    */
   async atualizar(codempregado: number, funcionario: Partial<Employee>): Promise<Employee> {
-    // TODO: Implementar PUT no backend
-    throw new Error('Método de atualização ainda não implementado no backend');
+    // Mapear para o formato esperado pelo backend
+    const dataToSend = {
+      // Campos do empregado
+      empregado: funcionario.empregado || '',
+      cpf: funcionario.cpf || '',
+      rg: funcionario.rg || '',
+      data_nascimento: funcionario.data_nascimento || '',
+      data_admissao: funcionario.data_admissao || '',
+      data_demissao: funcionario.data_demissao || null,
+      email_corporativo: funcionario.email_corporativo || '',
+      obs: funcionario.obs || '',
+      bloqueio: funcionario.bloqueio || 'N',
+      motivo_bloq: funcionario.motivo_bloq || '',
+      cargo: funcionario.cargo || '',
+      salario: funcionario.salario || 0,
+      codsetor: funcionario.codsetor || 1,
+      
+      // Campos de endereço
+      codendereco: funcionario.codendereco,
+      cep: funcionario.cep || '',
+      logradouro: funcionario.logradouro || '',
+      numero: funcionario.numero || '',
+      bairro: funcionario.bairro || '',
+      cidade: funcionario.cidade || '',
+      uf: funcionario.uf || '',
+      pais: funcionario.pais || 'BR',
+      
+      // Campos de contato (backend espera codcontato, não codtelefone)
+      codcontato: funcionario.codtelefone || funcionario.codcontato,
+      email: funcionario.email || '',
+      email2: funcionario.email2 || '',
+      telefone: funcionario.telefone || '',
+      celular: funcionario.celular || '',
+    };
+
+    const response = await apiClient.put<ApiResponse<Employee>>(`/empregados/${codempregado}`, dataToSend);
+    return normalizeEmployeeData(response.data);
   },
 
   /**

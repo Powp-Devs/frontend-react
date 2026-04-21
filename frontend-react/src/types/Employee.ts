@@ -16,6 +16,7 @@ export interface Employee {
   codsetor: number;
   codendereco?: number;
   codtelefone?: number;
+  codcontato?: number; // Alias para codtelefone (usado no backend)
 
   // Campos PWENDERECO (quando retornados da API)
   cep?: string;

@@ -171,6 +171,17 @@ export const useEmployeeManager = () => {
     return result;
   };
 
+  // Obter funcionário específico (para editar)
+  const getEmployee = async (codempregado: number): Promise<Employee> => {
+    try {
+      return await funcionarioService.obter(codempregado);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar funcionário');
+      console.error('Erro ao carregar funcionário:', err);
+      throw err;
+    }
+  };
+
   return {
     employees,
     selectedEmployees,
@@ -192,5 +203,6 @@ export const useEmployeeManager = () => {
     toggleSelectAll,
     getProcessedEmployees,
     loadEmployees,
+    getEmployee,
   };
 };
