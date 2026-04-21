@@ -1,6 +1,6 @@
 import React, { useState, FormEvent } from "react";
 import Header from "@/shared/components/layout/Header";
-import { useEmployeeManager } from "@/hooks/ueseEmployeeManager";
+import { useEmployeeManager } from "@/hooks/useEmployeeManager";
 import { Employee, SortColumn } from "@/types/Employee";
 import { useToast } from "@/hooks/useToast";
 import { ToastContainer } from "@/components/ToastContainer";

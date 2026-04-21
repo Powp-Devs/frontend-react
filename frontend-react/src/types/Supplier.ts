@@ -1,19 +1,35 @@
 export interface Supplier {
-  id: number;
-  name: string; // Razão Social
-  email: string;
-  date: string;
-  // Campos adicionais do formulário
-  cnpj?: string;
-  fantasyName?: string;
-  cep?: string;
-  address?: string; // Logradouro
-  number?: string;
-  neighborhood?: string;
-  city?: string;
-  state?: string;
-  phone?: string;
-  mobile?: string;
+
+//Campos fornecedor
+    codfornecedor: number;
+    fornecedor: string;
+    fantasia: string;
+    cnpj: string;
+    inscricaoestadual: string;
+    tipopessoa: 'J' | 'F';
+    dtcadastro: string;
+    obs: string;
+    bloqueio: string;
+    motivo_bloq: string;
+    dtbloqueio: string;
+    nome_representante: string;
+    cpf_representante: string;
+
+//Campos endereço
+    cep: string;
+    logradouro: string;
+    numero: string;
+    bairro: string;
+    cidade: string;
+    uf: string;
+    pais: string;
+
+//Campos contato
+    telefone: string;
+    celular: string;
+    email: string;
+    email2: string;
+
 }
 
 export type SortDirection = 'asc' | 'desc';
