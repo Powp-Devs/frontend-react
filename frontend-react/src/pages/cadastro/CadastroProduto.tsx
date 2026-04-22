@@ -55,12 +55,15 @@ const CadastroProduto: React.FC = () => {
         toggleSelectAll,
         handleSort,
         getProcessedProducts,
+        fornecedores
     } = useProductManager();
 
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [productToDelete, setProductToDelete] = useState<number | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
 
     const initialFormState: Partial<Product> = {
         produto: "",
@@ -87,7 +90,7 @@ const CadastroProduto: React.FC = () => {
 
     const openEditProductModal = (product: Product) => {
         setFormData(product);
-        setEditingId(product.id);
+        setEditingId(product.codproduto);
         setIsModalOpen(true);
     };
 
@@ -105,20 +108,35 @@ const CadastroProduto: React.FC = () => {
         }));
     };
 
-    const handleFormSubmit = (e: FormEvent) => {
+    const handleFormSubmit = async (e: FormEvent) => {
         e.preventDefault();
+        setSubmitError(null);
 
         if (!formData.produto || !formData.preco_venda) {
             alert("Nome e preço são obrigatórios.");
             return;
         }
+        
+        setIsSubmitting(true);
+        try {
+            const dataToSend = {
+                ...formData,
+                obs: formData.obs || " ",
+            };
 
         if (editingId) {
-            updateProduct(editingId, formData);
+            alert("Produto atualizado com sucesso!");
+            updateProduct(editingId, dataToSend);
         } else {
-            addProduct(formData as Omit<Product, "id">);
+            await addProduct(dataToSend as any);
         }
         setIsModalOpen(false);
+        setFormData(initialFormState);
+        } catch (err) {
+            setSubmitError(err instanceof Error ? err.message : 'Erro ao salvar produto');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     // Funções para abrir handlers de delete
@@ -135,7 +153,6 @@ const CadastroProduto: React.FC = () => {
         }
     };
     useEffect(() => {
-    // Pegamos os valores ou assumimos 0 se estiverem vazios
         const custo = formData.custo || 0;
         const preco = formData.preco_venda || 0;
 
@@ -149,12 +166,6 @@ const CadastroProduto: React.FC = () => {
         }));
     }
 }, [formData.custo, formData.preco_venda]);
-
-    const listaFornecedores = [
-    { id: 15, nome: "Fornecedor De Hardware" },
-    { id: 8, nome: "Distribuidora ABC" },
-    { id: 42, nome: "Frios e Cia" }
-    ];
 
     return (
         <div className="app-container">
@@ -217,7 +228,7 @@ const CadastroProduto: React.FC = () => {
                                     </th>
                                     <SortableHeader
                                         label="Cod. Fornecedor"
-                                        column="id"
+                                        column="codfornecedor"
                                         currentSort={sortConfig}
                                         onSort={handleSort}
                                     />
@@ -245,19 +256,19 @@ const CadastroProduto: React.FC = () => {
                             </thead>
                             <tbody>
                                 {filteredProducts.map((product) => (
-                                    <tr key={product.id}>
+                                    <tr key={product.codproduto}>
                                         <td className="checkbox-column">
                                             <input
                                                 type="checkbox"
                                                 checked={selectedProducts.has(
-                                                    product.id
+                                                    product.codproduto
                                                 )}
                                                 onChange={() =>
-                                                    toggleSelection(product.id)
+                                                    toggleSelection(product.codproduto)
                                                 }
                                             />
                                         </td>
-                                        <td>{product.id}</td>
+                                        <td>{product.codproduto}</td>
                                         <td>{product.produto}</td>
                                         <td>{product.obs}</td>
                                         <td>
@@ -283,7 +294,7 @@ const CadastroProduto: React.FC = () => {
                                             <button
                                                 className="action-btn delete-btn"
                                                 onClick={() =>
-                                                    confirmDelete(product.id)
+                                                    confirmDelete(product.codproduto)
                                                 }
                                             >
                                                 <DeleteIcon />
@@ -414,23 +425,23 @@ const CadastroProduto: React.FC = () => {
                                     <label htmlFor="status" style={{ margin: 0, cursor: 'pointer' }}>
                                         Produto Ativo
                                     </label>
-                                </div>
                                 <div className="form-group">
-                                    <label htmlFor="codfornecedor">Fornecedor *</label>
+                                    <label htmlFor="fornecedor">Fornecedor *</label>
                                     <select
-                                        id="codfornecedor"
-                                        name="codfornecedor" 
-                                        value={formData.codfornecedor || ""} 
-                                        onChange={handleFormChange}
+                                        id="fornecedor"
+                                        name="fornecedor"
+                                        value={formData.codfornecedor || ""}
+                                        onChange={(e) => setFormData({ ...formData, codfornecedor: Number(e.target.value) })}
+                                        required
                                     >
                                         <option value="" disabled>Selecione um fornecedor...</option>
-                                        
-                                        {listaFornecedores.map((fornecedor) => (
-                                            <option key={fornecedor.id} value={fornecedor.id}>
-                                                {fornecedor.nome}
+                                        {fornecedores.map((fornecedor) => (
+                                            <option key={fornecedor.codfornecedor} value={fornecedor.codfornecedor}>
+                                                {fornecedor.fornecedor}
                                             </option>
-                                        ))}
+                                            ))}
                                     </select>
+                                </div>
                                 </div>
                                 <div className="form-group">
                                     <label htmlFor="custo">Custo *</label>
