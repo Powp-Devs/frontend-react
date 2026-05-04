@@ -1,5 +1,6 @@
 export interface Product {  
-  id: number;
+  // Campos PWPRODUTO
+  codproduto: number;
   produto: string;
   obs: string;
   embalagem: string;
@@ -9,7 +10,7 @@ export interface Product {
   ean: string;
   status: 'A' | 'I' ;
   codfornecedor: number;
-
+  // Campos PWTABPR
   custo?: number;
   preco_venda?: number;
   margem: number;

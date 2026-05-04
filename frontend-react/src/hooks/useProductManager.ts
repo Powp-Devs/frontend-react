@@ -1,137 +1,118 @@
 import { useEffect, useState } from 'react';
 import { Product, SortDirection, SortColumn} from '../types/Product';
+import { produtoService } from '../services/produtoService';
+import api from '../services/api';
 
-const initialProducts: Product[] = [
-  {
-    id: 1, 
-    produto: 'Notebook Pro', 
-    obs: 'Notebook de alta performance para desenvolvedores.',
-    embalagem: 'Caixa',
-    sku: 'NP-001', 
-    unidade: 'un', 
-    gtin: '1234567890123', 
-    ean: '1234567890123', 
-    status: 'A', 
-    codfornecedor: 1001,
-    custo: 5000.0,
-    preco_venda: 7500.0,
-    margem: 0.33
-  },
-  {
-    id: 2, 
-    produto: 'Teclado Mecânico', 
-    obs: 'Teclado mecânico switch brown com LED RGB.', 
-    embalagem: 'Caixa',
-    sku: 'TM-001', 
-    unidade: 'un', 
-    gtin: '1234567890124', 
-    ean: '1234567890124', 
-    status: 'A', 
-    codfornecedor: 1002,
-    custo: 200.0,
-    preco_venda: 450.0,
-    margem: 0.56
-  },
-  {
-    id: 3, 
-    produto: 'Monitor UltraWide', 
-    obs: 'Monitor 34 polegadas WQHD para máxima produtividade.', 
-    embalagem: 'Caixa',
-    sku: 'MU-001', 
-    unidade: 'un', 
-    gtin: '1234567890125', 
-    ean: '1234567890125', 
-    status: 'A', 
-    codfornecedor: 1003,
-    custo: 1500.0,
-    preco_venda: 2500.0,
-    margem: 0.4,
-  },
-  {
-    id: 4,
-    produto: 'Mouse Wireless',
-    obs: 'Mouse ergonômico sem fio com bateria de longa duração.',
-    embalagem: 'Caixa',
-    sku: 'MW-001',
-    unidade: 'un',
-    gtin: '1234567890126',
-    ean: '1234567890126',
-    status: 'A',
-    codfornecedor: 1004,
-    custo: 299.9,
-    preco_venda: 299.9,
-    margem: 0.0
-  },
-  {
-    id: 5,
-    produto: 'Headset Noise Cancelling',
-    obs: 'Headset com cancelamento de ruído ativo.',
-    embalagem: 'Caixa',
-    sku: 'HN-001',
-    unidade: 'un',
-    gtin: '1234567890127',
-    ean: '1234567890127',
-    status: 'A',
-    codfornecedor: 1005,
-    custo: 890.0,
-    preco_venda: 890.0,
-    margem: 0.0
+  interface Fornecedor {
+    codfornecedor: number; 
+    fornecedor: string;
   }
-];
-
 export const useProductManager = () => {
-  const [products, setProducts] = useState<Product[]>(() => {
-    const savedProducts = localStorage.getItem('products');
-    if (savedProducts) {
-      const parsed = JSON.parse(savedProducts);
-      if (parsed.length > 0) return parsed;
-    }
-    return initialProducts;
-  });
-
+  const [products, setProducts] = useState<Product[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<Set<number>>(new Set());
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
   const [sortConfig, setSortConfig] = useState<{ column: SortColumn; direction: SortDirection }>({
-    column: 'id',
+    column: 'codproduto',
     direction: 'asc'
   });
+  const [fornecedores, setFornecedores] = useState<Fornecedor[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [formData, setFormData] = useState({
+      produto: '',
+      obs: '',
+      embalagem: "",
+      sku: "",
+      ean: "",
+      status: "A", 
+      codfornecedor: '',
+      custo: 0,
+      preco_venda: 0,
+      margem: 0
+    });
 
   useEffect(() => {
-    localStorage.setItem('products', JSON.stringify(products));
-  }, [products]);
+    async function carregarFornecedores() {
+      try {
+        const response = await api.get<any>('/fornecedor/listar');
+        const listaFornecedores = response?.data?.fornecedor || response?.fornecedor || [];
+        setFornecedores(listaFornecedores);
+      } catch (error) {
+        console.error("Erro ao carregar fornecedores:", error);
+      }
+    }
+    carregarFornecedores();
+  }, []);
+
+  useEffect(() => {
+    loadEmployees();
+  }, [currentPage]);
+
+  const loadEmployees = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await produtoService.listar(currentPage, pageSize);
+      setProducts(response.produto);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar funcionários');
+      console.error('Erro ao carregar funcionários:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   // Funções CRUD
 
   // Adicionar
-  const addProduct = (productData: Omit<Product, 'id'>) => {
-    const newProduct: Product = {
-      ...productData,
-      id: Date.now(), 
-    };
-
-    setProducts((prevProducts) => [...prevProducts, newProduct]);
+  const addProduct = async (employeeData: Omit<Product, 'codproduto'>) => {
+    try {
+      const newProduct = await produtoService.criar(employeeData);
+      setProducts((prevProducts) => [...prevProducts, newProduct]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao criar produto');
+      console.error('Erro ao criar produto:', err);
+      throw err;
+    }
   };
 
   // Atualizar
-  const updateProduct = (id: number, updatedData: Partial<Product>) => {
-    setProducts((prevProducts) =>
-      prevProducts.map((prod) => 
-        prod.id === id ? { ...prod, ...updatedData } : prod
-      )
-    );
+  const updateProduct = async (codproduto: number, updatedData: Partial<Product>) => {
+    try {
+      await produtoService.atualizar(codproduto, updatedData);
+      setProducts((prevProducts) =>
+        prevProducts.map((prod) =>
+          prod.codproduto === codproduto ? { ...prod, ...updatedData } : prod
+        )
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao atualizar produto');
+      console.error('Erro ao atualizar produto:', err);
+      throw err;
+    }
   };
 
   // Deletar
-  const deleteProduct = (id: number) => {
-    setProducts((prevProducts) => 
-      prevProducts.filter((prod) => prod.id !== id)
-    );
-    setSelectedProducts(prev => {
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
+  const deleteProduct = async (codproduto: number) => {
+    try {
+      await produtoService.deletar(codproduto);
+      setProducts((prevProducts) =>
+        prevProducts.filter((prod) => prod.codproduto !== codproduto)
+      );
+      setSelectedProducts(prev => {
+        const next = new Set(prev);
+        next.delete(codproduto);
+        return next;
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao deletar produto');
+      console.error('Erro ao deletar produto:', err);
+      throw err;
+    }
   };
 
   // Toggle select (checkbox único)
@@ -150,11 +131,11 @@ export const useProductManager = () => {
       setSelectedProducts(new Set());
       return;
     }
-    const allSelected = displayProducts.every(prod => selectedProducts.has(prod.id));
+    const allSelected = displayProducts.every(prod => selectedProducts.has(prod.codproduto));
     if (allSelected) {
       setSelectedProducts(new Set());
     } else {
-      setSelectedProducts(new Set(displayProducts.map(prod => prod.id)));
+      setSelectedProducts(new Set(displayProducts.map(prod => prod.codproduto)));
     }
   };
 
@@ -168,14 +149,14 @@ export const useProductManager = () => {
 
   // --- Exportar CSV ---
   const exportToCSV = () => {
-    const columns = ['CodFornecedor', 'Produto', 'Observação', 'Preço de Venda'];
+    const columns = ['ID', 'Produto', 'Observação', 'Preço de Venda'];
     let csvContent = columns.join(',') + '\n';
 
     products.forEach(product => {
       const row = [
-        product.id,
-        `"${product.produto.replace(/"/g, '""')}"`, 
-        `"${product.obs.replace(/"/g, '""')}"`,
+        product.codproduto,
+        `"${(product.produto || '').replace(/"/g, '""')}"`,
+        `"${(product.obs || '').replace(/"/g, '""')}"`,
         product.preco_venda,
       ];
       csvContent += row.join(',') + '\n';
@@ -220,6 +201,7 @@ export const useProductManager = () => {
         selectedProducts,
         searchTerm,
         sortConfig,
+        fornecedores,
         setSearchTerm,
         handleSort,
         addProduct,
@@ -229,6 +211,7 @@ export const useProductManager = () => {
         toggleSelection,
         toggleSelectAll,
         getProcessedProducts,
-        exportToCSV
+        exportToCSV,
+        
     };
 };
