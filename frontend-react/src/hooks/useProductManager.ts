@@ -48,15 +48,15 @@ export const useProductManager = () => {
   }, []);
 
   useEffect(() => {
-    loadEmployees();
+    loadProducts();
   }, [currentPage]);
 
-  const loadEmployees = async () => {
+  const loadProducts = async () => {
     setLoading(true);
     setError(null);
     try {
       const response = await produtoService.listar(currentPage, pageSize);
-      setProducts(response.produto);
+      setProducts(response.produtos ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar funcionários');
       console.error('Erro ao carregar funcionários:', err);
