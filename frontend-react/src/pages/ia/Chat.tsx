@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Header from '@/shared/components/layout/Header';
+import chatService from '@/services/chatService';
 import '@/styles/chatBot.css';
 
 interface Message {
@@ -55,17 +56,28 @@ const Chat: React.FC = () => {
     setInputValue('');
     setIsLoading(true);
 
-    // Simula resposta da IA (integrar com backend/API depois)
-    setTimeout(() => {
+    try {
+      // Chama a API da IA
+      const resposta = await chatService.enviarPergunta(text);
+      
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
-        content: `Processando sua pergunta: "${text}". Esta é uma resposta simulada. Integre com sua API de IA aqui.`,
+        content: resposta,
         timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, aiMessage]);
+    } catch (error) {
+      const errorMessage: Message = {
+        id: (Date.now() + 2).toString(),
+        type: 'ai',
+        content: error instanceof Error ? error.message : 'Desculpe, houve um erro ao processar sua pergunta.',
+        timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const handleSuggestedQuestion = (question: string) => {
