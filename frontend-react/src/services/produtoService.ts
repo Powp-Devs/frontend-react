@@ -57,7 +57,12 @@ export const produtoService = {
   // Criar novo produto
   async criar(produto: Omit<Product, 'codproduto'>): Promise<Product> {
     const response = await apiClient.post<ApiResponse<Product>>('/produtos/cadastrar', produto);
-    return normalizeProductData(response.data);
+    console.log('Resposta criar:', response);
+    const raw = response?.data ?? response; 
+    if (!raw || typeof raw !== 'object' || !(raw as any).codproduto) {
+        return {} as Product;
+    }
+    return normalizeProductData(raw);
   },
 
   // Atualizar produto

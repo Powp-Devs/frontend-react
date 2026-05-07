@@ -3,6 +3,9 @@ import Header from "@/shared/components/layout/Header";
 import {useProductManager} from "@/hooks/useProductManager";
 import {Product, SortColumn } from "@/types/Product";
 import "@/styles/cadastroProduto.css";
+import { useToast } from "@/hooks/useToast";
+import { ToastContainer } from "@/components/ToastContainer";
+import { CustomSelect } from "@/components/CustomSelect";
 
 // Icones
 const EditIcon = () => (
@@ -40,7 +43,9 @@ const DeleteIcon = () => (
         <line x1="14" y1="11" x2="14" y2="17"></line>
     </svg>
 );
-
+// -------------------------------------------------------
+// Componente principal
+// -------------------------------------------------------
 const CadastroProduto: React.FC = () => {
     const {
         selectedProducts,
@@ -57,31 +62,36 @@ const CadastroProduto: React.FC = () => {
         getProcessedProducts,
         fornecedores
     } = useProductManager();
+    // ── Toast ──────────────────────────────────────────────
+    const { toasts, removeToast, success, error: toastError, warning } = useToast();
 
+    // ── Estado local ───────────────────────────────────────
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [productToDelete, setProductToDelete] = useState<number | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
-
+    // ── Estado inicial do formulário
     const initialFormState: Partial<Product> = {
-        produto: "",
-        obs: "",
-        embalagem: "",
-        sku: "",
-        ean: "",
-        status: "A",
-        custo: 0,
-        preco_venda: 0,
-        margem: 0,
+        // Campos do produto
+        produto:          "",
+        obs:              "",
+        embalagem:        "",
+        sku:              "",
+        ean:              "",
+        status:          "A",
+        // Campos PWTABPR
+        custo:             0,
+        preco_venda:       0,
+        margem:            0,
     };
 
     const [formData, setFormData] = useState<Partial<Product>>(initialFormState);
 
     const filteredProducts = getProcessedProducts(searchTerm);
 
-    // Funções para abrir handlers do modal
+    // ── Handlers do modal ──────────────────────────────────
     const openNewProductModal = () => {
         setFormData(initialFormState);
         setEditingId(null);
@@ -93,7 +103,7 @@ const CadastroProduto: React.FC = () => {
         setEditingId(product.codproduto);
         setIsModalOpen(true);
     };
-
+    // Trata input, select e textarea com um único handler
     const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value, type } = e.target;
         let valorTratado: string | number = value;
@@ -107,7 +117,7 @@ const CadastroProduto: React.FC = () => {
             [name]: valorTratado
         }));
     };
-
+    // ── Submit ─────────────────────────────────────────────
     const handleFormSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setSubmitError(null);
@@ -125,33 +135,43 @@ const CadastroProduto: React.FC = () => {
             };
 
         if (editingId) {
-            alert("Produto atualizado com sucesso!");
-            updateProduct(editingId, dataToSend);
+            await updateProduct(editingId, dataToSend);
+            success("Produto atualizado!", `${formData.produto} foi atualizado com sucesso.`);
         } else {
             await addProduct(dataToSend as any);
+            success("Produto cadastrado!", `${formData.produto} foi adicionado com sucesso.`);
         }
         setIsModalOpen(false);
         setFormData(initialFormState);
         } catch (err) {
-            setSubmitError(err instanceof Error ? err.message : 'Erro ao salvar produto');
+            const msg = err instanceof Error ? err.message : 'Erro ao salvar produto';
+            setSubmitError(msg);
+            toastError("Erro ao salvar", msg);
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    // Funções para abrir handlers de delete
+    // ── Delete ─────────────────────────────────────────────
     const confirmDelete = (id: number) => {
         setProductToDelete(id);
         setIsDeleteModalOpen(true);
     };
 
-    const executeDelete = () => {
-        if (productToDelete) {
-            deleteProduct(productToDelete);
+    const executeDelete = async () => {
+        if (!productToDelete) 
+            return;
+        try {
+            await deleteProduct(productToDelete);
             setIsDeleteModalOpen(false);
             setProductToDelete(null);
+            success("Produto excluído", "O registro foi removido com sucesso.");
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : 'Erro ao excluir produto';
+            toastError("Erro ao excluir", msg);
         }
     };
+    // ── Calculo da margem ──────────────────────────────────────────────
     useEffect(() => {
         const custo = formData.custo || 0;
         const preco = formData.preco_venda || 0;
@@ -167,8 +187,11 @@ const CadastroProduto: React.FC = () => {
     }
 }, [formData.custo, formData.preco_venda]);
 
+    // ── Render ─────────────────────────────────────────────
     return (
         <div className="app-container">
+            <ToastContainer toasts={toasts} onRemove={removeToast} />
+
             <main className="main-content">
                 <Header />
                 <div
@@ -408,40 +431,37 @@ const CadastroProduto: React.FC = () => {
                                         onChange={handleFormChange}
                                     />
                                 </div>
-                                <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <input
-                                        type="checkbox"
-                                        id="status"
-                                        name="status"
-                                        checked={formData.status === 'A'} 
-                                        
-                                        onChange={(event) => {
-                                            setFormData(prevData => ({
-                                                ...prevData,
-                                                status: event.target.checked ? 'A' : 'I'
-                                            }));
-                                        }}
-                                    />
+                                <div className="form-group">
+                                    <div className="toggle-group">
+                                        <label className="toggle" htmlFor="status">
+                                            <input
+                                                type="checkbox"
+                                                id="status"
+                                                checked={formData.status === 'A'}
+                                                onChange={(e) => setFormData(prev => ({
+                                                    ...prev,
+                                                    status: e.target.checked ? 'A' : 'I'
+                                                }))}
+                                            />
+                                            <span className="toggle-track"></span>
+                                            <span className="toggle-thumb"></span>
+                                        </label>
+                                    </div>
                                     <label htmlFor="status" style={{ margin: 0, cursor: 'pointer' }}>
                                         Produto Ativo
                                     </label>
+                                </div>
                                 <div className="form-group">
                                     <label htmlFor="fornecedor">Fornecedor *</label>
-                                    <select
-                                        id="fornecedor"
-                                        name="fornecedor"
-                                        value={formData.codfornecedor || ""}
-                                        onChange={(e) => setFormData({ ...formData, codfornecedor: Number(e.target.value) })}
-                                        required
-                                    >
-                                        <option value="" disabled>Selecione um fornecedor...</option>
-                                        {fornecedores.map((fornecedor) => (
-                                            <option key={fornecedor.codfornecedor} value={fornecedor.codfornecedor}>
-                                                {fornecedor.fornecedor}
-                                            </option>
-                                            ))}
-                                    </select>
-                                </div>
+                                        <CustomSelect
+                                            options={fornecedores.map((f) => ({
+                                                value: f.codfornecedor,
+                                                label: f.fornecedor,
+                                            }))}
+                                            value={formData.codfornecedor || ""}
+                                            onChange={(val) => setFormData({ ...formData, codfornecedor: Number(val) })}
+                                            placeholder="Selecione um fornecedor"
+                                        />
                                 </div>
                                 <div className="form-group">
                                     <label htmlFor="custo">Custo *</label>
@@ -483,14 +503,16 @@ const CadastroProduto: React.FC = () => {
                                         type="button"
                                         className="btn btn-secondary"
                                         onClick={() => setIsModalOpen(false)}
+                                        disabled={isSubmitting}
                                     >
                                         Cancelar
                                     </button>
                                     <button
                                         type="submit"
                                         className="btn btn-primary"
+                                        disabled={isSubmitting}
                                     >
-                                        Salvar
+                                        {isSubmitting ? "Salvando..." : "Salvar"}
                                     </button>
                                 </div>
                             </form>

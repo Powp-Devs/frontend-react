@@ -71,11 +71,10 @@ export const useProductManager = () => {
   // Adicionar
   const addProduct = async (employeeData: Omit<Product, 'codproduto'>) => {
     try {
-      const newProduct = await produtoService.criar(employeeData);
-      setProducts((prevProducts) => [...prevProducts, newProduct]);
+      await produtoService.criar(employeeData);
+      await loadProducts();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao criar produto');
-      console.error('Erro ao criar produto:', err);
       throw err;
     }
   };
@@ -84,6 +83,7 @@ export const useProductManager = () => {
   const updateProduct = async (codproduto: number, updatedData: Partial<Product>) => {
     try {
       await produtoService.atualizar(codproduto, updatedData);
+      await loadProducts();
       setProducts((prevProducts) =>
         prevProducts.map((prod) =>
           prod.codproduto === codproduto ? { ...prod, ...updatedData } : prod
@@ -202,6 +202,7 @@ export const useProductManager = () => {
         searchTerm,
         sortConfig,
         fornecedores,
+        loading,
         setSearchTerm,
         handleSort,
         addProduct,
@@ -212,6 +213,6 @@ export const useProductManager = () => {
         toggleSelectAll,
         getProcessedProducts,
         exportToCSV,
-        
+        loadProducts
     };
 };
