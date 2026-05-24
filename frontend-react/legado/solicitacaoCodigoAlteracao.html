@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificação de Email</title>
+    <link rel="stylesheet" href="css/solicitacaoCodigoAlteracao.css">
+    <link rel="shortcut icon" href="assets/imagens/favicon-16x16.png" type="image/x-icon">
+</head>
+<body>
+
+    <div class="container">
+        <h1>Verificação de Email</h1>
+        
+        <!-- Tela para colocar o email -->
+        <div id="email-container">
+            <div class="input-group">
+                <label for="email">Digite seu Email:</label>
+                <div class="input-icon">
+                    <img src="assets/imagens/icons/icon-email.png" alt="Email Icone">
+                    <input type="email" id="email" required placeholder="exemplo@dominio.com">
+                </div>
+            </div>
+            <button id="enviar-email">Enviar Email</button>
+        </div>
+        
+        <!-- Tela para colocar o código de verificação -->
+        <div class="codigo-container" id="codigo-container">
+            <h2>Digite o Código de Verificação</h2>
+            <div>
+                <input type="text" id="codigo1" maxlength="1" oninput="moverFocus(event, 'codigo2')" />
+                <input type="text" id="codigo2" maxlength="1" oninput="moverFocus(event, 'codigo3')" />
+                <input type="text" id="codigo3" maxlength="1" oninput="moverFocus(event, 'codigo4')" />
+                <input type="text" id="codigo4" maxlength="1" oninput="moverFocus(event, 'codigo5')" />
+            </div>
+
+            <p id="reenviar-codigo" onclick="reenviarCodigoButton()">Reenviar Código</p>
+
+            <button id="verificar-codigo">Verificar Código</button>
+
+        </div>
+        
+        <div id="mensagem" class="mensagem"></div>
+    </div>
+
+    <script src="js/login/solicitacaoCodigoAlteracao.js"></script>
+</body>
+</html>
