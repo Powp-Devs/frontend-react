@@ -40,11 +40,11 @@ function normalizeSupplierData(data: any, endereco: any = {}, contato: any = {})
         fantasia:           data.fantasia            || '',
         cnpj:               data.cnpj               || '',
         inscricaoestadual:  data.inscricaoestadual   || '',
-        tipopessoa:         data.tipopessoa === 'F' ? 'F' : 'J',   
+        tipopessoa:         data.tipopessoa === 'F' ? 'F' : 'J',   // ← corrigido: 'J' || 'F' sempre retornava 'J'
         dtcadastro:         data.dtcadastro          || '',
         obs:                data.obs                 || '',
         bloqueio:           data.bloqueio            || 'N',
-        motivo_bloq:        data.motivo_bloqueio     || '',   
+        motivo_bloq:        data.motivo_bloqueio     || '',   // ← backend usa motivo_bloqueio
         dtbloqueio:         data.dtbloqueio          || '',
         nome_representante: data.nome_representante  || '',
         cpf_representante:  data.cpf_representante   || '',
