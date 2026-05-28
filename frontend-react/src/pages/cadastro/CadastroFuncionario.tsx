@@ -5,7 +5,6 @@ import { Employee, SortColumn } from "@/types/Employee";
 import { useToast } from "@/hooks/useToast";
 import { ToastContainer } from "@/components/ToastContainer";
 import "@/styles/cadastroFuncionario.css";
-import { set } from "mobx";
 
 // -------------------------------------------------------
 // Icons
@@ -63,12 +62,10 @@ const CadastroFuncionario: React.FC = () => {
     const [isModalOpen, setIsModalOpen]               = useState(false);
     const [isSubmitting, setIsSubmitting]             = useState(false);
     const [submitError, setSubmitError]               = useState<string | null>(null);
-    const [formPage, setFormPage] = useState(1); // Para navegação entre páginas do formulário, se necessário
 
     const initialFormState: Partial<Employee> = {
         empregado:      "",
         cpf:            "",
-        rg:             "",
         email:          "",
         email_corporativo: "",
         telefone:       "",
@@ -76,7 +73,6 @@ const CadastroFuncionario: React.FC = () => {
         cargo:          "",
         salario:        0,
         codsetor:       1,
-        motivo_bloq:    "teste",
         data_nascimento:"",
         data_admissao:  new Date().toISOString().split("T")[0],
         cep:            "",
@@ -96,7 +92,6 @@ const CadastroFuncionario: React.FC = () => {
         setFormData(initialFormState);
         setEditingId(null);
         setSubmitError(null);
-        setFormPage(1);
         setIsModalOpen(true);
     };
 
@@ -107,7 +102,6 @@ const CadastroFuncionario: React.FC = () => {
                 setFormData(fullEmployeeData);
                 setEditingId(employee.codempregado);
                 setSubmitError(null);
-                setFormPage(1);
                 setIsModalOpen(true);
             })
             .catch((err) => {
@@ -135,11 +129,11 @@ const CadastroFuncionario: React.FC = () => {
 
         // Validação — campos obrigatórios
         if (
-            !formData.empregado || !formData.cpf   || !formData.rg || !formData.email  ||
+            !formData.empregado || !formData.cpf   || !formData.email  ||
             !formData.cargo     || !formData.data_nascimento            ||
             !formData.data_admissao
         ) {
-            const msg = "Preencha todos os campos obrigatórios (Nome, CPF, rg, Email, Cargo, Data Nascimento, Data Admissão).";
+            const msg = "Preencha todos os campos obrigatórios (Nome, CPF, Email, Cargo, Data Nascimento, Data Admissão).";
             setSubmitError(msg);
             warning("Campos obrigatórios", msg);
             return;
@@ -343,7 +337,6 @@ const CadastroFuncionario: React.FC = () => {
                                         <td>{employee.codempregado}</td>
                                         <td>{employee.empregado}</td>
                                         <td>{employee.cpf}</td>
-                                        <td>{employee.rg}</td>
                                         <td>{employee.email || employee.email_corporativo }</td>
                                         <td>{employee.cargo}</td>
                                         <td>{employee.salario.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
@@ -404,173 +397,119 @@ const CadastroFuncionario: React.FC = () => {
                                 )}
 
                                 <form onSubmit={handleFormSubmit}>
-
-                                    {/* ── Indicador de etapas ── */}
-                                    <div className="form-steps">
-                                        <span className={`form-step ${formPage === 1 ? "active" : ""}`}>1. Dados Pessoais</span>
-                                        <span className="form-step-separator">→ </span>
-                                        <span className={`form-step ${formPage === 2 ? "active" : ""}`}>2. Endereço</span>
+                                    <div className="form-group">
+                                        <label>Nome *</label>
+                                        <input type="text" name="empregado"
+                                            value={formData.empregado || ""}
+                                            onChange={handleFormChange} required />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>CPF *</label>
+                                        <input type="text" name="cpf"
+                                            value={formData.cpf || ""}
+                                            onChange={handleFormChange} required />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Email *</label>
+                                        <input type="email" name="email"
+                                            value={formData.email || ""}
+                                            onChange={handleFormChange} required />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Email Corporativo</label>
+                                        <input type="email" name="email_corporativo"
+                                            value={formData.email_corporativo || ""}
+                                            onChange={handleFormChange} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Telefone</label>
+                                        <input type="text" name="telefone"
+                                            value={formData.telefone || ""}
+                                            onChange={handleFormChange}
+                                            placeholder="(11) 3333-4444" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Celular</label>
+                                        <input type="text" name="celular"
+                                            value={formData.celular || ""}
+                                            onChange={handleFormChange}
+                                            placeholder="(11) 99999-9999" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Cargo *</label>
+                                        <input type="text" name="cargo"
+                                            value={formData.cargo || ""}
+                                            onChange={handleFormChange} required />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Salário *</label>
+                                        <input type="number" name="salario"
+                                            value={formData.salario || ""}
+                                            onChange={handleFormChange}
+                                            step="0.01" min="0" required />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Data de Nascimento</label>
+                                        <input type="date" name="data_nascimento"
+                                            value={formData.data_nascimento || ""}
+                                            onChange={handleFormChange} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Data de Admissão</label>
+                                        <input type="date" name="data_admissao"
+                                            value={formData.data_admissao || ""}
+                                            onChange={handleFormChange} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>CEP</label>
+                                        <input type="text" name="cep"
+                                            value={formData.cep || ""}
+                                            onChange={handleFormChange}
+                                            placeholder="00000-000" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Logradouro</label>
+                                        <input type="text" name="logradouro"
+                                            value={formData.logradouro || ""}
+                                            onChange={handleFormChange} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Número</label>
+                                        <input type="text" name="numero"
+                                            value={formData.numero || ""}
+                                            onChange={handleFormChange} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Bairro</label>
+                                        <input type="text" name="bairro"
+                                            value={formData.bairro || ""}
+                                            onChange={handleFormChange} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Cidade</label>
+                                        <input type="text" name="cidade"
+                                            value={formData.cidade || ""}
+                                            onChange={handleFormChange} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>UF</label>
+                                        <input type="text" name="uf"
+                                            value={formData.uf || ""}
+                                            onChange={handleFormChange}
+                                            placeholder="SP" maxLength={2} />
                                     </div>
 
-                                    {/* ── Etapa 1: Dados Pessoais ── */}
-                                    {formPage === 1 && (
-                                        <>
-                                        <div className="form-grid">
-                                            <div className="form-group full-width">
-                                                <label>Nome *</label>
-                                                <input type="text" name="empregado"
-                                                    value={formData.empregado || ""}
-                                                    onChange={handleFormChange} required />
-                                            </div>
-                                            <div className="form-group full-width">
-                                                <label>Email *</label>
-                                                <input type="email" name="email"
-                                                    value={formData.email || ""}
-                                                    onChange={handleFormChange} required />
-                                            </div>
-                                            <div className="form-group full-width">
-                                                <label>Email Corporativo</label>
-                                                <input type="email" name="email_corporativo"
-                                                    value={formData.email_corporativo || ""}
-                                                    onChange={handleFormChange} />
-                                            </div>
-                                            <div className="form-group">
-                                                <label>CPF *</label>
-                                                <input type="text" name="cpf"
-                                                    value={formData.cpf || ""}
-                                                    onChange={handleFormChange} required />
-                                            </div>
-                                            <div className="form-group">
-                                                <label>RG *</label>
-                                                <input type="text" name="rg"
-                                                    value={formData.rg || ""}
-                                                    onChange={handleFormChange} required />
-                                            </div>
-                                            <div className="form-group">
-                                                <label>Telefone</label>
-                                                <input type="text" name="telefone"
-                                                    value={formData.telefone || ""}
-                                                    onChange={handleFormChange}
-                                                    placeholder="(11) 3333-4444" />
-                                            </div>
-                                            <div className="form-group">
-                                                <label>Celular</label>
-                                                <input type="text" name="celular"
-                                                    value={formData.celular || ""}
-                                                    onChange={handleFormChange}
-                                                    placeholder="(11) 99999-9999" />
-                                            </div>
-                                            <div className="form-group">
-                                                <label>Cargo *</label>
-                                                <input type="text" name="cargo"
-                                                    value={formData.cargo || ""}
-                                                    onChange={handleFormChange} required />
-                                            </div>
-                                            <div className="form-group">
-                                                <label>Salário *</label>
-                                                <input type="number" name="salario"
-                                                    value={formData.salario || ""}
-                                                    onChange={handleFormChange}
-                                                    step="0.01" min="0" required />
-                                            </div>
-                                            <div className="form-group">
-                                                <label>Data de Nascimento</label>
-                                                <input type="date" name="data_nascimento"
-                                                    value={formData.data_nascimento || ""}
-                                                    onChange={handleFormChange} />
-                                            </div>
-                                            <div className="form-group">
-                                                <label>Data de Admissão</label>
-                                                <input type="date" name="data_admissao"
-                                                    value={formData.data_admissao || ""}
-                                                    onChange={handleFormChange} />
-                                            </div>
-                                        </div>
-                                        <div className="form-group actions">
-                                            <button type="button" className="btn btn-secondary"
-                                                onClick={() => {
-                                                    // Validação antecipada da etapa 1
-                                                    if(!formData.empregado || !formData.cpf || !formData.rg
-                                                        || !formData.email || !formData.cargo || !formData.data_nascimento
-                                                        || !formData.data_admissao) {
-                                                            setSubmitError("Preencha todos os campos obrigatórios antes de continuar.");
-                                                            return;
-                                                        }
-                                                    setSubmitError(null);
-                                                    setFormPage(2);
-                                                }}
-                                                disabled={isSubmitting}>
-                                                Próximo →
-                                            </button>
-                                        </div>
-                                    </>
-                                    )}
-
-                                    {/* ── Etapa 2: Endereço ── */}
-                                    {formPage === 2 && (
-                                        <>
-                                            <div className="form-group">
-                                                <label>CEP</label>
-                                                <input type="text" name="cep"
-                                                    value={formData.cep || ""}
-                                                    onChange={handleFormChange}
-                                                    placeholder="00000-000" />
-                                            </div>
-                                            <div className="form-group">
-                                                <label>Logradouro</label>
-                                                <input type="text" name="logradouro"
-                                                    value={formData.logradouro || ""}
-                                                    onChange={handleFormChange} />
-                                            </div>
-                                            <div className="form-group">
-                                                <label>Número</label>
-                                                <input type="text" name="numero"
-                                                    value={formData.numero || ""}
-                                                    onChange={handleFormChange} />
-                                            </div>
-                                            <div className="form-group">
-                                                <label>Bairro</label>
-                                                <input type="text" name="bairro"
-                                                    value={formData.bairro || ""}
-                                                    onChange={handleFormChange} />
-                                            </div>
-                                            <div className="form-group">
-                                                <label>Cidade</label>
-                                                <input type="text" name="cidade"
-                                                    value={formData.cidade || ""}
-                                                    onChange={handleFormChange} />
-                                            </div>
-                                            <div className="form-group">
-                                                <label>UF</label>
-                                                <input type="text" name="uf"
-                                                    value={formData.uf || ""}
-                                                    onChange={handleFormChange}
-                                                    placeholder="SP" maxLength={2} />
-                                            </div>
-
-                                            <div className="form-group actions">
-                                                <button type="button" className="btn btn-secondary"
-                                                    onClick={() => setFormPage(1)}
-                                                    disabled={isSubmitting}>
-                                                    ← Voltar
-                                                </button>
-                                                <button type="submit" className="btn btn-primary"
-                                                    disabled={isSubmitting}>
-                                                    {isSubmitting ? "Salvando..." : "Salvar"}
-                                                </button>
-                                            </div>
-                                        </>
-                                    )}
-
-                                    {formPage === 1 && (
-                                        <div className="form-group actions">
-                                            <button type="button" className="btn btn-secondary"
-                                                onClick={() => setIsModalOpen(false)}
-                                                disabled={isSubmitting}>
-                                                Cancelar
-                                            </button>
-                                        </div>
-                                    )}
+                                    <div className="form-group actions">
+                                        <button type="button" className="btn btn-secondary"
+                                            onClick={() => setIsModalOpen(false)}
+                                            disabled={isSubmitting}>
+                                            Cancelar
+                                        </button>
+                                        <button type="submit" className="btn btn-primary"
+                                            disabled={isSubmitting}>
+                                            {isSubmitting ? "Salvando..." : "Salvar"}
+                                        </button>
+                                    </div>
                                 </form>
                             </div>
                         </div>
