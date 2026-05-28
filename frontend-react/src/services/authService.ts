@@ -1,34 +1,36 @@
 import apiClient from '@/services/api';
 
 interface LoginRequest {
-  username: string;
-  password: string;
+  usuario: string;
+  senha: string;
+}
+
+interface UsuarioData {
+  nome: string;
+  usuario: string;
+  codusuario: number;
 }
 
 interface LoginResponse {
   access_token: string;
   token_type: string;
-  user?: {
-    id: number;
-    username: string;
-    email?: string;
-  };
+  usuário: UsuarioData;
 }
 
 class AuthService {
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     try {
-      const response = await apiClient.post<LoginResponse>('/auth/login', {
-        username: credentials.username,
-        password: credentials.password,
+      const response = await apiClient.post<LoginResponse>('/usuarios/login', {
+        usuario: credentials.usuario,
+        senha: credentials.senha,
       });
 
       // Salva o token no localStorage
       if (response.access_token) {
         localStorage.setItem('auth_token', response.access_token);
         localStorage.setItem('token_type', response.token_type);
-        if (response.user) {
-          localStorage.setItem('user', JSON.stringify(response.user));
+        if (response.usuário) {
+          localStorage.setItem('user', JSON.stringify(response.usuário));
         }
       }
 
@@ -58,8 +60,8 @@ class AuthService {
     return user ? JSON.parse(user) : null;
   }
 
-  saveRememberedUser(username: string): void {
-    localStorage.setItem('rememberedUser', username);
+  saveRememberedUser(usuario: string): void {
+    localStorage.setItem('rememberedUser', usuario);
   }
 
   getRememberedUser(): string | null {
@@ -68,6 +70,11 @@ class AuthService {
 
   removeRememberedUser(): void {
     localStorage.removeItem('rememberedUser');
+  }
+
+  getUserData(): UsuarioData | null {
+    const user = localStorage.getItem('user');
+    return user ? JSON.parse(user) : null;
   }
 }
 
