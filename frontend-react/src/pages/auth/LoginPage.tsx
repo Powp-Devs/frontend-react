@@ -4,22 +4,22 @@ import authService from '@/services/authService';
 import '@/app/styles/login.css';
 
 interface LoginFormData {
-  usuario: string;
-  senha: string;
+  username: string;
+  password: string;
 }
 
 const LoginPage: React.FC = () => {
   const [formData, setFormData] = useState<LoginFormData>({
-    usuario: '',
-    senha: '',
+    username: '',
+    password: '',
   });
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [inputStates, setInputStates] = useState({
-    usuario: 'neutral',
-    senha: 'neutral',
+    username: 'neutral',
+    password: 'neutral',
   });
   const [mounted, setMounted] = useState(false);
 
@@ -28,7 +28,7 @@ const LoginPage: React.FC = () => {
   useEffect(() => {
     const rememberedUser = authService.getRememberedUser();
     if (rememberedUser) {
-      setFormData(prev => ({ ...prev, usuario: rememberedUser }));
+      setFormData(prev => ({ ...prev, username: rememberedUser }));
       setRememberMe(true);
     }
     // Trigger mount animation via CSS class
@@ -45,27 +45,27 @@ const LoginPage: React.FC = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
     setError('');
 
-    if (name === 'usuario') {
+    if (name === 'username') {
       if (value.trim().length > 0) {
         if (value.includes('@') && !isValidEmail(value)) {
-          setInputStates(prev => ({ ...prev, usuario: 'error' }));
+          setInputStates(prev => ({ ...prev, username: 'error' }));
         } else {
-          setInputStates(prev => ({ ...prev, usuario: 'success' }));
+          setInputStates(prev => ({ ...prev, username: 'success' }));
         }
       } else {
-        setInputStates(prev => ({ ...prev, usuario: 'neutral' }));
+        setInputStates(prev => ({ ...prev, username: 'neutral' }));
       }
     }
 
-    if (name === 'senha') {
+    if (name === 'password') {
       if (value.length > 0) {
         if (value.length < 6) {
-          setInputStates(prev => ({ ...prev, senha: 'warning' }));
+          setInputStates(prev => ({ ...prev, password: 'warning' }));
         } else {
-          setInputStates(prev => ({ ...prev, senha: 'success' }));
+          setInputStates(prev => ({ ...prev, password: 'success' }));
         }
       } else {
-        setInputStates(prev => ({ ...prev, senha: 'neutral' }));
+        setInputStates(prev => ({ ...prev, password: 'neutral' }));
       }
     }
   };
@@ -78,28 +78,28 @@ const LoginPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const usuario = formData.usuario.trim();
-    const senha = formData.senha.trim();
+    const username = formData.username.trim();
+    const password = formData.password.trim();
 
-    if (!usuario) {
+    if (!username) {
       showError('Por favor, digite seu usuário ou e-mail');
       return;
     }
-    if (!senha) {
+    if (!password) {
       showError('Por favor, digite sua senha');
       return;
     }
-    if (senha.length < 3) {
+    if (password.length < 3) {
       showError('A senha deve ter pelo menos 3 caracteres');
       return;
     }
-    if (usuario.includes('@') && !isValidEmail(usuario)) {
+    if (username.includes('@') && !isValidEmail(username)) {
       showError('Por favor, digite um e-mail válido');
       return;
     }
 
     if (rememberMe) {
-      authService.saveRememberedUser(usuario);
+      authService.saveRememberedUser(username);
     } else {
       authService.removeRememberedUser();
     }
@@ -107,11 +107,11 @@ const LoginPage: React.FC = () => {
     setLoading(true);
 
     try {
-      await authService.login({ usuario, senha });
+      await authService.login({ username, password });
       setTimeout(() => navigate('/dashboard'), 1500);
     } catch (err: any) {
       setLoading(false);
-      const errorMessage = err.response?.data?.detail || 'Erro no Login. Tente novamente.';
+      const errorMessage = err.response?.data?.message || 'Erro no Login. Tente novamente.';
       showError(errorMessage);
     }
   };
@@ -160,9 +160,9 @@ const LoginPage: React.FC = () => {
 
             <form onSubmit={handleSubmit} id="form-login" noValidate>
 
-              {/* Usuario field */}
-              <div className={`input-group ${inputStates.usuario !== 'neutral' ? `state-${inputStates.usuario}` : ''}`}>
-                <label className="input-label" htmlFor="usuario">
+              {/* Username field */}
+              <div className={`input-group ${inputStates.username !== 'neutral' ? `state-${inputStates.username}` : ''}`}>
+                <label className="input-label" htmlFor="username">
                   Usuário ou e-mail
                 </label>
                 <div className="input-wrapper">
@@ -179,22 +179,22 @@ const LoginPage: React.FC = () => {
                   </svg>
                   <input
                     type="text"
-                    id="usuario"
-                    name="usuario"
+                    id="username"
+                    name="username"
                     required
                     placeholder="seu@email.com"
                     autoComplete="username"
-                    value={formData.usuario}
+                    value={formData.username}
                     onChange={handleInputChange}
                     disabled={loading}
-                    aria-describedby={inputStates.usuario === 'error' ? 'usuario-error' : undefined}
+                    aria-describedby={inputStates.username === 'error' ? 'username-error' : undefined}
                   />
-                  {inputStates.usuario === 'success' && (
+                  {inputStates.username === 'success' && (
                     <svg className="input-state-icon success" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
                   )}
-                  {inputStates.usuario === 'error' && (
+                  {inputStates.username === 'error' && (
                     <svg className="input-state-icon error" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                       <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
                     </svg>
@@ -203,8 +203,8 @@ const LoginPage: React.FC = () => {
               </div>
 
               {/* Password field */}
-              <div className={`input-group ${inputStates.senha !== 'neutral' ? `state-${inputStates.senha}` : ''}`}>
-                <label className="input-label" htmlFor="senha">
+              <div className={`input-group ${inputStates.password !== 'neutral' ? `state-${inputStates.password}` : ''}`}>
+                <label className="input-label" htmlFor="password">
                   Senha
                 </label>
                 <div className="input-wrapper">
@@ -223,12 +223,12 @@ const LoginPage: React.FC = () => {
                   <div className="password-container">
                     <input
                       type={showPassword ? 'text' : 'password'}
-                      name="senha"
-                      id="senha"
+                      name="password"
+                      id="password"
                       required
                       placeholder="••••••••"
                       autoComplete="current-password"
-                      value={formData.senha}
+                      value={formData.password}
                       onChange={handleInputChange}
                       disabled={loading}
                     />
@@ -255,6 +255,18 @@ const LoginPage: React.FC = () => {
                     </button>
                   </div>
                 </div>
+
+                {/* Password strength indicator */}
+                {formData.password.length > 0 && (
+                  <div className="password-strength" aria-live="polite">
+                    <div className={`strength-bar state-${inputStates.password}`}>
+                      <div className="strength-fill" />
+                    </div>
+                    <span className="strength-label">
+                      {inputStates.password === 'warning' ? 'Senha fraca' : 'Senha forte'}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Options row */}
