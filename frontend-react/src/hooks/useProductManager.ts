@@ -7,6 +7,7 @@ import api from '../services/api';
     codfornecedor: number; 
     fornecedor: string;
   }
+  
 export const useProductManager = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<Set<number>>(new Set());

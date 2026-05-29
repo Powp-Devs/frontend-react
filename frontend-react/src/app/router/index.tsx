@@ -8,6 +8,7 @@ import CadastroClientes from '@/pages/cadastro/CadastroClientes';
 import CadastroFuncionario from '@/pages/cadastro/CadastroFuncionario';
 import CadastroProduto from '@/pages/cadastro/CadastroProduto';
 import CadastroSetor from '@/pages/cadastro/CadastroSetor';
+import NovoPedido from '@/pages/vendas/NovoPedido';
 
 const AppRouter: React.FC = () => {
   return (
@@ -19,7 +20,7 @@ const AppRouter: React.FC = () => {
       <Route path="/cadastro-funcionarios" element={<CadastroFuncionario />} />
       <Route path="/cadastro-setor" element={<CadastroSetor />} />
       <Route path="/chat" element={<Chat />} />
-
+      <Route path="/vendas" element={<NovoPedido />} />
       <Route path="/usuarios" element={<OrdersPage />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
 
