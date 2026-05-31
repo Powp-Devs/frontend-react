@@ -1,6 +1,6 @@
 /* Sidebar Styles */
 .sidebar {
-  width: var(--sidebar-width);
+  width: 250px;
   height: 100vh;
   background: linear-gradient(135deg, #004d40 0%, var(--color-primary) 100%);
   color: var(--text-light);
@@ -13,7 +13,7 @@
 }
 
 .sidebar.collapsed {
-  width: var(--sidebar-collapsed-width);
+  width: 70px;
 }
 
 .sidebar.collapsed .sidebar-text,
@@ -39,16 +39,24 @@
   position: relative;
 }
 
-.menu-item.active{
-  background-color: rgba(255, 255, 255, 0.15);
+.menu-item:hover,
+.menu-item.active,
+.menu-item:active {
+  background-color: rgba(255, 255, 255, 0.12);
   border-left-color: var(--accent-color);
-  color: var(--white);
 }
 
 .menu-item:hover {
   background-color: rgba(255, 255, 255, 0.1);
   color: var(--white);
 
+}
+
+.menu-item.active,
+.menu-item:active {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-left-color: var(--accent-color);
+  color: var(--white);
 }
 
 .submenu {
@@ -91,8 +99,6 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex: 1;
-  min-width: 0;
 }
 
 /* Scrollbar customization */
@@ -117,7 +123,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 8px;
+  margin-right: 12px;
   font-size: 50px; /* Aumente este valor para ícones maiores */
   min-width: 24px;
 }
