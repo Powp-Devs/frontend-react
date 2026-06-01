@@ -1,14 +1,18 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import Sidebar from '@/shared/components/layout/Sidebar';
 import { ToastProvider } from "@/components/ToastContext";
 import AppRouter from '@/app/router';
 import '@/app/styles/global.css';
 
 const App: React.FC = () => {
+  const location = useLocation();
+  const showSidebar = location.pathname !== '/login';
+
   return (
     <ToastProvider>
       <div className="app-container">
-        <Sidebar />
+        {showSidebar && <Sidebar />}
         <main className="main-content">
           <AppRouter />
         </main>
