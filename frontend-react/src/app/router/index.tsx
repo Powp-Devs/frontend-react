@@ -1,5 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import LoginPage from '@/pages/auth/LoginPage';
+import RegisterPage from '@/pages/auth/RegisterPage';
 import DashboardPage from '@/pages/DashboardPage';
 import OrdersPage from '@/pages/OrdersPage';
 import Chat from '@/pages/ia/Chat';
@@ -13,6 +15,8 @@ import NovoPedido from '@/pages/vendas/NovoPedido';
 const AppRouter: React.FC = () => {
   return (
     <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/cadastro-cliente" element={<CadastroClientes />} />
       <Route path="/cadastro-produtos" element={<CadastroProduto />} />
@@ -22,7 +26,7 @@ const AppRouter: React.FC = () => {
       <Route path="/chat" element={<Chat />} />
       <Route path="/vendas" element={<NovoPedido />} />
       <Route path="/usuarios" element={<OrdersPage />} />
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
 
     </Routes>
   );
