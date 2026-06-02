@@ -1,11 +1,6 @@
 import apiClient from '@/services/api';
 import { Login, LoginResponse } from '@/types/Login';
 
-interface LoginRequest {
-  usuario: string;
-  senha: string;
-}
-
 interface RegisterRequest {
   nome: string;
   email: string;
@@ -17,12 +12,6 @@ interface UsuarioData {
   nome: string;
   usuario: string;
   codusuario: number;
-}
-
-interface LoginResponse {
-  access_token: string;
-  token_type: string;
-  usuário: UsuarioData;
 }
 
 interface RegisterResponse {

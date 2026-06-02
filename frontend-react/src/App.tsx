@@ -7,7 +7,8 @@ import '@/app/styles/global.css';
 
 const App: React.FC = () => {
   const location = useLocation();
-  const showSidebar = location.pathname !== '/login';
+  const routesWithoutSidebar = ['/login', '/register'];
+  const showSidebar = !routesWithoutSidebar.includes(location.pathname);
 
   return (
     <ToastProvider>
@@ -22,4 +23,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-
