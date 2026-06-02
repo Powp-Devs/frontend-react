@@ -1,35 +1,8 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Client, SortColumn } from '../types/Client';
+import { clienteService } from '../services/clienteService';
 
 type SortDirection = 'asc' | 'desc';
-
-// Dados iniciais de clientes
-const initialClientsData: Client[] = [
-  {
-    id: 1,
-    nome: 'João Silva',
-    email: 'joao@dominio.com',
-    telefone: '11987654321',
-    endereco: 'Rua A, 123 - Bairro Centro',
-    cidade: 'São Paulo',
-    estado: 'SP',
-    cep: '01310-100',
-    tipo_pessoa: 'fisica',
-    cpf_cnpj: '12345678900'
-  },
-  {
-    id: 2,
-    nome: 'Maria Santos',
-    email: 'maria@dominio.com',
-    telefone: '11988776655',
-    endereco: 'Rua B, 456 - Bairro Vila',
-    cidade: 'São Paulo',
-    estado: 'SP',
-    cep: '02140-000',
-    tipo_pessoa: 'fisica',
-    cpf_cnpj: '98765432100'
-  }
-];
 
 const formatDate = (date: Date): string => {
   const day = date.getDate().toString().padStart(2, '0');
@@ -39,62 +12,128 @@ const formatDate = (date: Date): string => {
   return `${day} ${month} ${year}`;
 };
 
+const formatISODate = (date: Date): string => {
+  return date.toISOString().split('T')[0];
+};
+
+const mapBackendClient = (cliente: any, contatos: any[], enderecos: any[]): Client => {
+  const contato = contatos.find((c) => c.codcontato === cliente.codtelefone) || {};
+  const endereco = enderecos.find((e) => e.codendereco === cliente.codendereco) || {};
+
+  return {
+    id: cliente.codcliente,
+    nome: cliente.cliente,
+    email: contato.email || '',
+    telefone: contato.telefone || contato.celular || '',
+    endereco: endereco.logradouro ? `${endereco.logradouro}, ${endereco.numero || ''}`.trim() : '',
+    cidade: endereco.cidade || '',
+    estado: endereco.uf || '',
+    cep: endereco.cep || '',
+    tipo_pessoa: cliente.tipopessoa === 'J' ? 'juridica' : 'fisica',
+    data_criacao: cliente.dtcadastro ? new Date(cliente.dtcadastro).toLocaleDateString('pt-BR') : undefined
+  };
+};
+
+const mapBackendClients = (response: any): Client[] => {
+  const clientes = response?.cliente || [];
+  const contatos = response?.contato || [];
+  const enderecos = response?.endereco || [];
+  return clientes.map((cliente: any) => mapBackendClient(cliente, contatos, enderecos));
+};
+
+const createClientePayload = (clientData: Partial<Client>) => ({
+  cliente: clientData.nome || '',
+  fantasia: clientData.nome || '',
+  dtcadastro: formatISODate(new Date()),
+  tipopessoa: 'F',
+  obs: '',
+  bloqueio: 'N',
+  motivo_bloq: '',
+  cep: clientData.cep || '',
+  logradouro: clientData.endereco || '',
+  numero: 'S/N',
+  bairro: '',
+  cidade: clientData.cidade || '',
+  uf: clientData.estado || 'SP',
+  pais: 'BR',
+  telefone: clientData.telefone || '',
+  celular: clientData.telefone || '',
+  email: clientData.email || '',
+  email2: clientData.email || '',
+  cpf: '00000000000',
+  rg: '000000000',
+  dt_nascimento: formatISODate(new Date())
+});
+
 export function useClientManager() {
-  // Estado inicial carrega do localStorage ou usa o mock
-  const [clients, setClients] = useState<Client[]>(() => {
-    const saved = localStorage.getItem('clients');
-    return saved ? JSON.parse(saved) : initialClientsData;
-  });
-
+  const [clients, setClients] = useState<Client[]>([]);
   const [selectedClients, setSelectedClients] = useState<Set<number>>(new Set());
-  const [sortConfig, setSortConfig] = useState<{ column: SortColumn; direction: SortDirection }>({
-    column: 'id',
-    direction: 'asc'
-  });
+  const [sortConfig, setSortConfig] = useState<{ column: SortColumn; direction: SortDirection }>(
+    {
+      column: 'id',
+      direction: 'asc'
+    }
+  );
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Persistência automática
   useEffect(() => {
-    localStorage.setItem('clients', JSON.stringify(clients));
-  }, [clients]);
+    loadClients();
+  }, []);
 
-  // Adicionar Cliente
-  const addClient = (clientData: Partial<Client>) => {
-    const maxId = clients.length > 0 ? Math.max(...clients.map(c => c.id)) : 0;
-    const newClient: Client = {
-      id: maxId + 1,
-      nome: clientData.nome || '',
-      email: clientData.email || '',
-      telefone: clientData.telefone,
-      endereco: clientData.endereco,
-      cidade: clientData.cidade,
-      estado: clientData.estado,
-      cep: clientData.cep,
-      tipo_pessoa: clientData.tipo_pessoa,
-      cpf_cnpj: clientData.cpf_cnpj,
-      data_criacao: formatDate(new Date())
-    };
-    setClients(prev => [...prev, newClient]);
-    return newClient;
+  const loadClients = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await clienteService.listar(1, 100);
+      const mapped = mapBackendClients(response);
+      setClients(mapped);
+    } catch (err: any) {
+      setError(err?.response?.data?.detail || 'Erro ao carregar clientes.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Atualizar Cliente
-  const updateClient = (id: number, updatedData: Partial<Client>) => {
-    setClients(prev => prev.map(c => (c.id === id ? { ...c, ...updatedData, data_atualizacao: formatDate(new Date()) } : c)));
+  const addClient = async (clientData: Partial<Client>) => {
+    try {
+      const payload = createClientePayload(clientData);
+      await clienteService.criar(payload);
+      await loadClients();
+    } catch (err: any) {
+      setError(err?.response?.data?.detail || 'Erro ao adicionar cliente.');
+      throw err;
+    }
   };
 
-  // Deletar Cliente
-  const deleteClient = (id: number) => {
-    setClients(prev => prev.filter(c => c.id !== id));
-    setSelectedClients(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(id);
-      return newSet;
-    });
+  const updateClient = async (id: number, updatedData: Partial<Client>) => {
+    try {
+      const payload = createClientePayload(updatedData);
+      await clienteService.atualizar(id, payload);
+      await loadClients();
+    } catch (err: any) {
+      setError(err?.response?.data?.detail || 'Erro ao atualizar cliente.');
+      throw err;
+    }
   };
 
-  // Seleção (Checkbox)
+  const deleteClient = async (id: number) => {
+    try {
+      await clienteService.deletar(id);
+      setClients(prev => prev.filter((c) => c.id !== id));
+      setSelectedClients((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(id);
+        return newSet;
+      });
+    } catch (err: any) {
+      setError(err?.response?.data?.detail || 'Erro ao excluir cliente.');
+      throw err;
+    }
+  };
+
   const toggleSelection = (id: number) => {
-    setSelectedClients(prev => {
+    setSelectedClients((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(id)) newSet.delete(id);
       else newSet.add(id);
@@ -106,24 +145,22 @@ export function useClientManager() {
     if (selectedClients.size === filteredClients.length && filteredClients.length > 0) {
       setSelectedClients(new Set());
     } else {
-      setSelectedClients(new Set(filteredClients.map(c => c.id)));
+      setSelectedClients(new Set(filteredClients.map((c) => c.id)));
     }
   };
 
-  // Ordenação
   const handleSort = (column: SortColumn) => {
-    setSortConfig(current => ({
+    setSortConfig((current) => ({
       column,
       direction: current.column === column && current.direction === 'asc' ? 'desc' : 'asc'
     }));
   };
 
-  // Exportar CSV
   const exportToCSV = () => {
     const columns = ['Cod.', 'Nome', 'E-MAIL', 'Telefone'];
     let csvContent = columns.join(',') + '\n';
 
-    clients.forEach(client => {
+    clients.forEach((client) => {
       const row = [
         client.id,
         `"${client.nome.replace(/"/g, '""')}"`,
@@ -143,14 +180,13 @@ export function useClientManager() {
     document.body.removeChild(link);
   };
 
-  // Filtro e Ordenação
   const getProcessedClients = (searchTerm: string) => {
     let result = [...clients];
 
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       result = result.filter(
-        c =>
+        (c) =>
           c.id.toString().includes(term) ||
           c.nome.toLowerCase().includes(term) ||
           c.email.toLowerCase().includes(term)
@@ -161,7 +197,6 @@ export function useClientManager() {
       let aValue: any;
       let bValue: any;
 
-      // Mapeamento de valores para ordenação
       if (sortConfig.column === 'id') {
         aValue = a.id;
         bValue = b.id;
@@ -196,6 +231,9 @@ export function useClientManager() {
     toggleSelectAll,
     handleSort,
     exportToCSV,
-    getProcessedClients
+    getProcessedClients,
+    loading,
+    error,
+    loadClients
   };
 }

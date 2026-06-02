@@ -22,17 +22,19 @@ interface RegisterResponse {
 class AuthService {
   async login(credentials: Login): Promise<LoginResponse> {
     try {
-      const response = await apiClient.post<LoginResponse>('/auth/login', {
-        username: credentials.username,
-        password: credentials.password,
+      const response = await apiClient.post<LoginResponse>('/usuarios/login', {
+        usuario: credentials.username,
+        senha: credentials.password,
       });
 
-      // Salva o token no localStorage
       if (response.access_token) {
         localStorage.setItem('auth_token', response.access_token);
         localStorage.setItem('token_type', response.token_type);
-        if (response.user) {
-          localStorage.setItem('user', JSON.stringify(response.user));
+        apiClient.setAuthToken(response.access_token);
+
+        const user = response.user || response.usuario;
+        if (user) {
+          localStorage.setItem('user', JSON.stringify(user));
         }
       }
 
