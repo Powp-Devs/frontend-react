@@ -1,5 +1,6 @@
 import React, { useState, FormEvent } from "react";
 import Header from "@/shared/components/layout/Header";
+import { useToastContext } from "@/components/ToastContext";
 import { useClientManager } from "@/hooks/useClientManager";
 import { Client, SortColumn } from "@/types/Client";
 import "@/styles/cadastroCliente.css";
@@ -54,7 +55,11 @@ const CadastroCliente: React.FC = () => {
         handleSort,
         exportToCSV,
         getProcessedClients,
+        loading,
+        error,
     } = useClientManager();
+
+    const { success, error: showError } = useToastContext();
 
     const [searchTerm, setSearchTerm] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -96,7 +101,7 @@ const CadastroCliente: React.FC = () => {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e: FormEvent) => {
+    const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
         if (!formData.nome || !formData.email) {
@@ -104,13 +109,21 @@ const CadastroCliente: React.FC = () => {
             return;
         }
 
-        if (editingId) {
-            updateClient(editingId, formData);
-        } else {
-            addClient(formData as any);
+        try {
+            if (editingId) {
+                await updateClient(editingId, formData);
+                success("Cliente atualizado", "As alterações foram salvas com sucesso.");
+            } else {
+                await addClient(formData as any);
+                success("Cliente cadastrado", "O cliente foi adicionado com sucesso.");
+            }
+            setIsModalOpen(false);
+        } catch (err: any) {
+            showError(
+                "Erro ao salvar cliente",
+                err?.response?.data?.detail || "Verifique os dados e tente novamente."
+            );
         }
-
-        setIsModalOpen(false);
     };
 
     // Handlers de Delete
@@ -119,11 +132,19 @@ const CadastroCliente: React.FC = () => {
         setIsDeleteModalOpen(true);
     };
 
-    const executeDelete = () => {
+    const executeDelete = async () => {
         if (clientToDelete) {
-            deleteClient(clientToDelete);
-            setIsDeleteModalOpen(false);
-            setClientToDelete(null);
+            try {
+                await deleteClient(clientToDelete);
+                success("Cliente excluído", "O cliente foi removido com sucesso.");
+                setIsDeleteModalOpen(false);
+                setClientToDelete(null);
+            } catch (err: any) {
+                showError(
+                    "Erro ao excluir cliente",
+                    err?.response?.data?.detail || "Não foi possível deletar o cliente."
+                );
+            }
         }
     };
 
@@ -165,6 +186,18 @@ const CadastroCliente: React.FC = () => {
                         </button>
                     </div>
                 </div>
+
+                {loading && (
+                    <div className="loading-message" style={{ padding: '16px', color: '#333' }}>
+                        Carregando clientes...
+                    </div>
+                )}
+
+                {error && (
+                    <div className="error-message" style={{ padding: '16px', color: '#b00020' }}>
+                        {error}
+                    </div>
+                )}
 
                 <section className="suppliers-section">
                     <div className="table-container">

@@ -1,34 +1,24 @@
 import apiClient from './api';
-import { Client, Response, PaginatedResponse } from '@/types';
+import { Client } from '@/types';
 
 export const clienteService = {
-  // Obter todos os clientes
-  async listar(page = 1, pageSize = 10): Promise<PaginatedResponse<Client>> {
-    return apiClient.get(`/clientes?page=${page}&pageSize=${pageSize}`);
+  async listar(page = 1, pageSize = 100): Promise<any> {
+    return apiClient.get(`/clientes/listar?page=${page}&per_page=${pageSize}`);
   },
 
-  // Obter cliente por ID
-  async obter(id: number): Promise<Response<Client>> {
-    return apiClient.get(`/clientes/${id}`);
+  async obter(id: number): Promise<any> {
+    return apiClient.get(`/clientes/buscar/${id}`);
   },
 
-  // Criar novo cliente
-  async criar(cliente: Omit<Client, 'id'>): Promise<Response<Client>> {
-    return apiClient.post('/clientes', cliente);
+  async criar(cliente: any): Promise<any> {
+    return apiClient.post('/clientes/cadastrar', cliente);
   },
 
-  // Atualizar cliente
-  async atualizar(id: number, cliente: Partial<Client>): Promise<Response<Client>> {
-    return apiClient.put(`/clientes/${id}`, cliente);
+  async atualizar(id: number, cliente: any): Promise<any> {
+    return apiClient.put(`/clientes/atualizar/${id}`, cliente);
   },
 
-  // Deletar cliente
-  async deletar(id: number): Promise<Response<void>> {
-    return apiClient.delete(`/clientes/${id}`);
-  },
-
-  // Buscar clientes por texto
-  async buscar(termo: string): Promise<Response<Client[]>> {
-    return apiClient.get(`/clientes/buscar?termo=${termo}`);
-  },
+  async deletar(id: number): Promise<any> {
+    return apiClient.delete(`/clientes/deletar/${id}`);
+  }
 };

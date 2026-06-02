@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
+import authService from '@/services/authService';
 import { observer } from 'mobx-react-lite';
 import clsx from 'clsx';
 import '../styles/sidebar.css';
@@ -80,6 +81,7 @@ const menuItems: MenuItem[] = [
 ];
 
 const Sidebar: React.FC = observer(() => {
+  const navigate = useNavigate();
   // Se quiser que ela comece aberta, deixe false. Se quiser fechada, true.
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [expandedMenu, setExpandedMenu] = useState<string | null>('Cadastro');
@@ -87,6 +89,11 @@ const Sidebar: React.FC = observer(() => {
   const handleSubmenuToggle = (label: string) => {
     if (isCollapsed) return;
     setExpandedMenu(prev => (prev === label ? null : label));
+  };
+
+  const handleLogout = () => {
+    authService.logout();
+    navigate('/login', { replace: true });
   };
 
   return (
@@ -154,10 +161,10 @@ const Sidebar: React.FC = observer(() => {
           <div className="icon-container"><Icons.Settings /></div>
           <span className="sidebar-text">Configurações</span>
         </NavLink>
-        <NavLink to="/login" className="menu-item">
+        <button type="button" className="menu-item logout-button" onClick={handleLogout}>
           <div className="icon-container"><Icons.Logout /></div>
           <span className="sidebar-text">Sair</span>
-        </NavLink>
+        </button>
       </div>
     </aside>
   );
