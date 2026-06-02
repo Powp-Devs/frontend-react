@@ -94,6 +94,11 @@ const Sidebar: React.FC = observer(() => {
     setExpandedMenu(prev => (prev === label ? null : label));
   };
 
+  const handleLogout = () => {
+    authService.logout();
+    navigate('/login', { replace: true });
+  };
+
   return (
     <aside
       className={clsx('sidebar', { 'collapsed': isCollapsed })}
@@ -161,10 +166,10 @@ const Sidebar: React.FC = observer(() => {
           <div className="icon-container"><Icons.Settings /></div>
           <span className="sidebar-text">Configurações</span>
         </NavLink>
-        <NavLink to="/login" className="menu-item">
+        <button type="button" className="menu-item logout-button" onClick={handleLogout}>
           <div className="icon-container"><Icons.Logout /></div>
           <span className="sidebar-text">Sair</span>
-        </NavLink>
+        </button>
       </div>
     </aside>
   );

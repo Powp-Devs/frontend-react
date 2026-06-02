@@ -23,6 +23,11 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (authService.isAuthenticated()) {
+      navigate('/dashboard', { replace: true });
+      return;
+    }
+
     const rememberedUser = authService.getRememberedUser();
     if (rememberedUser) {
       setFormData(prev => ({ ...prev, username: rememberedUser }));
@@ -30,7 +35,7 @@ const LoginPage: React.FC = () => {
     }
     // Trigger mount animation via CSS class
     requestAnimationFrame(() => setMounted(true));
-  }, []);
+  }, [navigate]);
 
   const isValidEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -253,7 +258,7 @@ const LoginPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Password strength indicator */}
+                {/* Password strength indicator
                 {formData.password.length > 0 && (
                   <div className="password-strength" aria-live="polite">
                     <div className={`strength-bar state-${inputStates.password}`}>
@@ -264,6 +269,7 @@ const LoginPage: React.FC = () => {
                     </span>
                   </div>
                 )}
+                */}
               </div>
 
               {/* Options row */}
