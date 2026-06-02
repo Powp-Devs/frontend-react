@@ -189,7 +189,7 @@ function ModalDetalheProduto({ produto, onConfirm, onCancel }: { produto: any; o
 }
 
 // ─── TELA: Novo Pedido ────────────────────────────────────────────────────────
-export default function NovoPedido() {
+export default function NovoPedido({ onVoltar }: { onVoltar?: () => void }) {
   const [tab, setTab] = useState<TabNovoPedido>("dados_gerais");
   const [itens, setItens] = useState<ItemCarrinho[]>([]);
   const [modalBusca, setModalBusca] = useState(false);
@@ -241,7 +241,12 @@ export default function NovoPedido() {
   return (
   <>
      <div className="top-bar">
-            <span className="top-bar-title">Lançar Pedido</span>
+        {onVoltar && (
+          <button onClick={onVoltar} className="btn-secondary" style={{ marginRight: 12 }}>
+            ← Voltar
+          </button>
+        )}
+        <span className="top-bar-title">Lançar Pedido</span>
         </div>
     <div className="page-wrapper">
         {/* Stepper */}
