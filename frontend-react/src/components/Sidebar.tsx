@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { observer } from 'mobx-react-lite';
 import clsx from 'clsx';
 import '../styles/sidebar.css';
@@ -80,9 +80,14 @@ const menuItems: MenuItem[] = [
 ];
 
 const Sidebar: React.FC = observer(() => {
+  const location = useLocation();
+
+  const isCadastroActive = menuItems
+    .find(i => i.label === 'Cadastro')
+    ?.submenu?.some(sub => location.pathname === sub.path);
   // Se quiser que ela comece aberta, deixe false. Se quiser fechada, true.
   const [isCollapsed, setIsCollapsed] = useState(true);
-  const [expandedMenu, setExpandedMenu] = useState<string | null>('Cadastro');
+  const [expandedMenu, setExpandedMenu] = useState<string | null>('null');
 
   const handleSubmenuToggle = (label: string) => {
     if (isCollapsed) return;
@@ -113,7 +118,7 @@ const Sidebar: React.FC = observer(() => {
               {hasSubmenu ? (
                 <>
                   <div
-                    className={clsx('menu-item dropdown', { 'active': isExpanded })}
+                    className={clsx('menu-item dropdown', { 'active': isCadastroActive })}
                     onClick={() => handleSubmenuToggle(item.label)}
                   >
                     <div className="icon-container">{item.icon}</div>
@@ -128,6 +133,7 @@ const Sidebar: React.FC = observer(() => {
                       <NavLink
                         key={sub.path}
                         to={sub.path}
+                        end
                         className={({ isActive }) => clsx('submenu-item', { 'active': isActive })}
                       >
                         <span className="sidebar-text">{sub.label}</span>
@@ -138,6 +144,7 @@ const Sidebar: React.FC = observer(() => {
               ) : (
                 <NavLink
                   to={item.path!}
+                  end
                   className={({ isActive }) => clsx('menu-item', { 'active': isActive })}
                 >
                   <div className="icon-container">{item.icon}</div>

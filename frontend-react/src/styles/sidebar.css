@@ -1,6 +1,6 @@
 /* Sidebar Styles */
 .sidebar {
-  width: 250px;
+  width: var(--sidebar-width);
   height: 100vh;
   background: linear-gradient(135deg, #004d40 0%, var(--color-primary) 100%);
   color: var(--text-light);
@@ -13,7 +13,7 @@
 }
 
 .sidebar.collapsed {
-  width: 70px;
+  width: var(--sidebar-collapsed-width);
 }
 
 .sidebar.collapsed .sidebar-text,
@@ -39,24 +39,16 @@
   position: relative;
 }
 
-.menu-item:hover,
-.menu-item.active,
-.menu-item:active {
-  background-color: rgba(255, 255, 255, 0.12);
+.menu-item.active{
+  background-color: rgba(255, 255, 255, 0.15);
   border-left-color: var(--accent-color);
+  color: var(--white);
 }
 
 .menu-item:hover {
   background-color: rgba(255, 255, 255, 0.1);
   color: var(--white);
 
-}
-
-.menu-item.active,
-.menu-item:active {
-  background-color: rgba(255, 255, 255, 0.15);
-  border-left-color: var(--accent-color);
-  color: var(--white);
 }
 
 .submenu {
@@ -66,6 +58,8 @@
   list-style: none;
   padding-bottom: 20px;
   margin: 0;
+  flex: 1;
+  min-width: 0;
 }
 
 .submenu.show {
