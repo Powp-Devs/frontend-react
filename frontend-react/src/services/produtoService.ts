@@ -23,14 +23,15 @@ function normalizeProductData(data: any): Product {
         // Campos PWPRODUTO
         codproduto:    data.codproduto,
         produto:       data.produto       || '',
-        obs:           data.obs           || '',
-        embalagem:     data.embalagem     || '',
         sku:           data.sku           || '',
+        embalagem:     data.embalagem     || '',
         unidade:       data.unidade       || '',
         gtin:          data.gtin          || '',
         ean:           data.ean           || '',
         status:        data.status === 'I' ? 'I' : 'A',
-        codfornecedor: data.codfornecedor,
+        obs:           data.obs           || '',
+        codfornecedor: data.codfornecedor  ?? 0,
+        codcategoria:  data.codcategoria   ?? 0,
         // Campos PWTABPR
         custo:         data.custo        ?? undefined,
         preco_venda:   data.preco_venda  ?? undefined,
@@ -54,9 +55,24 @@ export const produtoService = {
     return normalizeProductData(response.data);
   },
 
-  // Criar novo produto
-  async criar(produto: Omit<Product, 'codproduto'>): Promise<Product> {
-    const response = await apiClient.post<ApiResponse<Product>>('/produtos/cadastrar', produto);
+  // Criar novo produto — envia APENAS os campos da rota /produtos/cadastrar
+  async criar(produto: Omit<Product, 'codproduto' | 'estoque' | 'estoque_minimo'>): Promise<Product> {
+    const payload = {
+      produto:       produto.produto,
+      sku:           produto.sku,
+      embalagem:     produto.embalagem,
+      unidade:       produto.unidade,
+      gtin:          produto.gtin,
+      ean:           produto.ean,
+      status:        produto.status,
+      obs:           produto.obs,
+      codfornecedor: produto.codfornecedor,
+      codcategoria:  produto.codcategoria,
+      custo:         produto.custo ?? 0,
+      preco_venda:   produto.preco_venda ?? 0,
+      margem:        produto.margem ?? 0,
+    };
+    const response = await apiClient.post<ApiResponse<Product>>('/produtos/cadastrar', payload);
     console.log('Resposta criar:', response);
     const raw = response?.data ?? response; 
     if (!raw || typeof raw !== 'object' || !(raw as any).codproduto) {
@@ -65,9 +81,25 @@ export const produtoService = {
     return normalizeProductData(raw);
   },
 
-  // Atualizar produto
+  // FUNÇÃO PARA O ESTOQUE
+  async cadastrarEstoque(dadosEstoque: {
+    codproduto: number;
+    estoque: number;
+    estoque_minimo: number;
+    estoque_reservado: number;
+    estoque_bloqueado: number;
+    obs: string;
+  }): Promise<void> {
+    // Atenção: Confirme se a sua rota no FastAPI é exatamente '/estoque/cadastrar'
+    await apiClient.post('/estoque/cadastrar', dadosEstoque);
+  },
+
+  // Atualizar produto — envia APENAS os campos da rota /produtos/atualizar
   async atualizar(codproduto: number, produto: Partial<Product>): Promise<Product> {
-    const response = await apiClient.put<ApiResponse<Product>>(`/produtos/atualizar/${codproduto}`, produto);
+    const payload: Record<string, any> = {};
+    const camposProduto = ['produto','sku','embalagem','unidade','gtin','ean','status','obs','codfornecedor','codcategoria','custo','preco_venda','margem'] as const;
+    camposProduto.forEach(k => { if (produto[k] !== undefined) payload[k] = produto[k]; });
+    const response = await apiClient.put<ApiResponse<Product>>(`/produtos/atualizar/${codproduto}`, payload);
     return normalizeProductData(response.data);
   },
 

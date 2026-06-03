@@ -9,7 +9,7 @@ export interface ChatResponse {
 }
 
 class ChatService {
-  private baseUrl = `${API_BASE_URL}/api/consulta-ia`;
+  private baseUrl = `${API_BASE_URL}/consulta-ia`;
 
   async enviarPergunta(pergunta: string): Promise<string> {
     try {

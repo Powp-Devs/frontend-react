@@ -70,30 +70,66 @@ export const useProductManager = () => {
   // Funções CRUD
 
   // Adicionar
-  const addProduct = async (employeeData: Omit<Product, 'codproduto'>) => {
+  const addProduct = async (productData: any) => {
+    setLoading(true);
     try {
-      await produtoService.criar(employeeData);
-      await loadProducts();
+      // 1. Separamos as variáveis de estoque dos dados puros do produto
+      const { 
+        estoque, 
+        estoque_minimo, 
+        ...dadosProduto 
+      } = productData;
+
+      // 2. Enviamos apenas os dados do Produto para a API
+      const novoProduto = await produtoService.criar(dadosProduto);
+
+      if (!novoProduto || !novoProduto.codproduto) {
+        throw new Error("Erro interno: A API não retornou o código do produto criado.");
+      }
+
+      // 3. Montamos o Payload exato que a sua rota de Estoque espera
+      const payloadEstoque = {
+        codproduto: novoProduto.codproduto, // O ID que acabou de ser gerado no backend!
+        estoque: Number(estoque) || 0,
+        estoque_minimo: Number(estoque_minimo) || 0,
+        estoque_reservado: 0,
+        estoque_bloqueado: 0,
+        obs: "Saldo inicial cadastrado via formulário de produto"
+      };
+
+      // 4. Disparamos a segunda requisição para salvar o estoque
+      await produtoService.cadastrarEstoque(payloadEstoque);
+
+      // 5. Atualizamos a tabela na tela do usuário
+      setProducts(prev => [...prev, novoProduto]);
+      
+      return novoProduto;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao criar produto');
+      const msg = err instanceof Error ? err.message : 'Erro ao adicionar produto e estoque';
+      setError(msg);
       throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
   // Atualizar
-  const updateProduct = async (codproduto: number, updatedData: Partial<Product>) => {
+  const updateProduct = async (id: number, productData: any) => {
+    setLoading(true);
     try {
-      await produtoService.atualizar(codproduto, updatedData);
-      await loadProducts();
-      setProducts((prevProducts) =>
-        prevProducts.map((prod) =>
-          prod.codproduto === codproduto ? { ...prod, ...updatedData } : prod
-        )
-      );
+      // 👇 Removemos o stock para não enviar para a rota de produto!
+      const { estoque, estoque_minimo, ...dadosProduto } = productData;
+      
+      const updated = await produtoService.atualizar(id, dadosProduto);
+      
+      setProducts(prev => prev.map(p => p.codproduto === id ? updated : p));
+      return updated;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao atualizar produto');
-      console.error('Erro ao atualizar produto:', err);
+      const msg = err instanceof Error ? err.message : 'Erro ao atualizar produto';
+      setError(msg);
       throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
