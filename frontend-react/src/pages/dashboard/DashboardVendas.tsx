@@ -6,6 +6,19 @@ import '@/styles/dashboardVendas.css';
 
 Chart.register(...registerables);
 
+const obterDatahoje = () => {
+  return new Date().toISOString().split('T')[0];
+};
+
+const obterPrimeiroDiaMes = () => {
+  const data = new Date();
+  const primeiroDia = new Date(data.getFullYear(), data.getMonth(), 1);
+
+  primeiroDia.setMinutes(primeiroDia.getMinutes() - primeiroDia.getTimezoneOffset());
+
+  return primeiroDia.toISOString().split('T')[0];
+};
+
 const formatMoeda = (valor: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
 
@@ -13,6 +26,9 @@ const DashboardVendas: React.FC = () => {
   const [dados, setDados] = useState<DashboardVendasResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
+
+  const [dataInicial, setDataInicial] = useState<string>(obterPrimeiroDiaMes());
+  const [dataFinal, setDataFinal] = useState<string>(obterDatahoje());
 
   const salesChartRef = useRef<HTMLCanvasElement>(null);
   const productsChartRef = useRef<HTMLCanvasElement>(null);
@@ -24,20 +40,25 @@ const DashboardVendas: React.FC = () => {
   const barChartInstance = useRef<Chart | null>(null);
   const paymentChartInstance = useRef<Chart | null>(null);
 
+  const carregarDados = async () => {
+    try {
+      setLoading(true);
+      setErro(null);
+
+      const data = await dashboardService.getVendas(dataInicial, dataFinal);
+      setDados(data);
+    } catch (e) {
+      setErro('Erro ao carregar dados do dashboard de vendas.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const carregar = async () => {
-      try {
-        setLoading(true);
-        const data = await dashboardService.getVendas();
-        setDados(data);
-      } catch (e) {
-        setErro('Erro ao carregar dados do dashboard de vendas.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    carregar();
+    carregarDados();
   }, []);
+
+  
 
   useEffect(() => {
     if (!dados) return;
@@ -150,6 +171,35 @@ const DashboardVendas: React.FC = () => {
 
   return (
     <div className="dv-container">
+      {/* BARRA DE FILTROS */}
+      <div className="dv-filter-bar">
+        <div className="dv-filter-group">
+          <label>Data Inicial:</label>
+          <input 
+            type="date" 
+            value={dataInicial} 
+            onChange={(e) => setDataInicial(e.target.value)} 
+            className="dv-date-input"
+          />
+        </div>
+        <div className="dv-filter-group">
+          <label>Data Final:</label>
+          <input 
+            type="date" 
+            value={dataFinal} 
+            onChange={(e) => setDataFinal(e.target.value)} 
+            className="dv-date-input"
+          />
+        </div>
+        <button 
+          onClick={carregarDados} 
+          className="dv-btn-filtrar"
+          disabled={loading}
+        >
+          {loading ? 'Filtrando...' : 'Filtrar'}
+        </button>
+      </div>
+
       <div className="dv-cards">
         <div className="dv-card yellow">
           <div className="dv-card-content">
