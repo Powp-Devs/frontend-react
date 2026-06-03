@@ -11,6 +11,7 @@ import CadastroFuncionario from '@/pages/cadastro/CadastroFuncionario';
 import CadastroProduto from '@/pages/cadastro/CadastroProduto';
 import CadastroSetor from '@/pages/cadastro/CadastroSetor';
 import NovoPedido from '@/pages/vendas/NovoPedido';
+import ControleEstoque from '@/pages/estoque/ControleEstoque';
 import authService from '@/services/authService';
 
 const ProtectedRoute = () => {
@@ -38,6 +39,7 @@ const AppRouter: React.FC = () => {
         <Route path="/cadastro-setor" element={<CadastroSetor />} />
         <Route path="/chat" element={<Chat />} />
         <Route path="/vendas" element={<NovoPedido />} />
+        <Route path="/estoque" element={<ControleEstoque />} />
         <Route path="/usuarios" element={<OrdersPage />} />
       </Route>
 
