@@ -44,9 +44,15 @@ export const setorService = {
             params: { page, per_page: perPage },
         });
 
-        const sectors = response.setor.map((s: any) => normalizeSectorData(s));
+        const dadosApi = (response as any).data || response;
 
-        return { sectors, total: response.total, page: response.page, perPage: response.per_page };
+        const sectors = (dadosApi.setor || []).map((s: any) => normalizeSectorData(s));
+
+        return { 
+            sectors, 
+            total: dadosApi.total, 
+            page: dadosApi.page, 
+            perPage: dadosApi.per_page };
     },
 
     /**

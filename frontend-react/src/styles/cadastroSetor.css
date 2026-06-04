@@ -356,6 +356,31 @@ body {
   cursor: not-allowed;
 }
 
+/* ── Paginação ────────────────────────────────────────────── */
+.pagination-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-surface);
+}
+
+.pagination-info {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+}
+
+.pagination-info strong {
+    color: var(--color-text-primary);
+    font-weight: var(--font-semibold);
+}
+
+.pagination-actions {
+    display: flex;
+    gap: 8px;
+}
+
 /* Animations */
 @keyframes fadeIn {
   from { opacity: 0; }
