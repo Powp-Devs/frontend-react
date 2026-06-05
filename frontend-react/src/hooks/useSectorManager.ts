@@ -11,8 +11,10 @@ export const useSectorManager = () => {
     });
     const [loading, setLoading]   = useState(false);
     const [error, setError]       = useState<string | null>(null);
-    const [currentPage]           = useState(1);
+    const [currentPage, setCurrentPage]           = useState(1);
     const [pageSize]              = useState(10);
+    const [totalItems, setTotalItems] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
 
     // ── Carga inicial ──────────────────────────────────────
     useEffect(() => {
@@ -22,9 +24,16 @@ export const useSectorManager = () => {
     const loadSectors = async () => {
         setLoading(true);
         setError(null);
+
         try {
-            const { sectors: data } = await setorService.listar(currentPage, pageSize);
-            setSectors(data);
+            const response = await setorService.listar(currentPage, pageSize);
+            
+            setSectors(response.sectors || []);
+
+            const total = response.total || 0;
+            setTotalItems(total);
+            setTotalPages(Math.ceil(total / pageSize) || 1);
+
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Erro ao carregar setores');
         } finally {
@@ -185,5 +194,9 @@ export const useSectorManager = () => {
         handleSort,
         getProcessedSectors,
         reloadSectors: loadSectors,
+        currentPage,
+        setCurrentPage,
+        totalPages,
+        totalItems
     };
 };

@@ -89,6 +89,75 @@ canvas {
   max-height: 260px;
 }
 
+/* --- Estilos do Filtro de Datas --- */
+.dv-filter-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  background: #fff;
+  padding: 16px 20px;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  margin-bottom: 8px;
+}
+
+.dv-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dv-filter-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #78909c;
+  text-transform: uppercase;
+}
+
+.dv-date-input {
+  padding: 8px 12px;
+  border: 1px solid #dcdcdc;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #263238;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.dv-date-input:focus {
+  border-color: #3498db;
+}
+
+.dv-btn-filtrar {
+  padding: 9px 20px;
+  background-color: #3498db;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  height: 38px;
+}
+
+.dv-btn-filtrar:hover {
+  background-color: #2980b9;
+}
+
+.dv-btn-filtrar:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .dv-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
 @media (max-width: 768px) {
   .dv-charts-row {
     grid-template-columns: 1fr;

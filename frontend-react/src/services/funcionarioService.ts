@@ -77,7 +77,18 @@ export const funcionarioService = {
     const response = await apiClient.get<PaginatedResponse<Employee>>('/empregados', {
       params: { page, page_size: pageSize }
     });
-    return response;
+
+    const rawData = (response as any).data || response;
+
+    const listaBruta = rawData.empregado || rawData.data || [];
+
+    return {
+      ...rawData,
+      empregado: listaBruta.map(normalizeEmployeeData),
+      total: rawData.total || 0,
+      page: rawData.page || 1,
+      perPage: rawData.per_page || 10
+    };
   },
 
   /**

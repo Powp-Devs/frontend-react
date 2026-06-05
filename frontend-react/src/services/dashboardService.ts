@@ -6,8 +6,13 @@ import type {
 } from '@/types/Dashboard';
 
 export const dashboardService = {
-  getVendas: () =>
-    apiClient.get<DashboardVendasResponse>('/dashboard/vendas'),
+  getVendas: (dataInicial?: string, dataFinal?: string) =>
+    apiClient.get<DashboardVendasResponse>('/dashboard/vendas', {
+      params: {
+        dtinicio: dataInicial,
+        dtfim: dataFinal
+      }
+    }),
 
   getEstoque: () =>
     apiClient.get<DashboardEstoqueResponse>('/dashboard/estoque'),

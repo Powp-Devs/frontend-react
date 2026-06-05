@@ -81,6 +81,10 @@ const CadastroProduto: React.FC = () => {
         handleSort,
         getProcessedProducts,
         fornecedores,
+        currentPage,
+        setCurrentPage,
+        totalPages, 
+        totalItems
     } = useProductManager();
 
     const { toasts, removeToast, success, error: toastError } = useToast();
@@ -270,6 +274,29 @@ const CadastroProduto: React.FC = () => {
                                 )}
                             </tbody>
                         </table>
+
+                        <div className="pagination-footer">
+                            <span className="pagination-info">
+                                Exibindo página <strong>{currentPage}</strong> de <strong>{totalPages}</strong> ({totalItems} registros)
+                            </span>
+                            <div className="pagination-actions">
+                                <button 
+                                    className="btn btn-secondary" 
+                                    disabled={currentPage === 1}
+                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                >
+                                    Anterior
+                                </button>
+                                <button 
+                                    className="btn btn-secondary" 
+                                    disabled={currentPage >= totalPages}
+                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                >
+                                    Próxima
+                                </button>
+                            </div>
+                        </div>
+
                     </div>
                 </section>
             </main>

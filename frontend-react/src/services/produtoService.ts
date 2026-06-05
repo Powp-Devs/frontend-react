@@ -73,12 +73,21 @@ export const produtoService = {
       margem:        produto.margem ?? 0,
     };
     const response = await apiClient.post<ApiResponse<Product>>('/produtos/cadastrar', payload);
+    
     console.log('Resposta criar:', response);
     const raw = response?.data ?? response; 
-    if (!raw || typeof raw !== 'object' || !(raw as any).codproduto) {
+
+    const produtoRetornado = (raw as any).produto || raw;
+
+    /*if (!raw || typeof raw !== 'object' || !(raw as any).codproduto) {
         return {} as Product;
+    }*/
+
+    if (!produtoRetornado || !produtoRetornado.codproduto) {
+        throw new Error("Erro interno: A API não retornou o código do produto criado.");
     }
-    return normalizeProductData(raw);
+
+    return normalizeProductData(produtoRetornado);
   },
 
   // FUNÇÃO PARA O ESTOQUE
