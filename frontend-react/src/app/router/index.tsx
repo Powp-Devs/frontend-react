@@ -10,6 +10,7 @@ import CadastroClientes from '@/pages/cadastro/CadastroClientes';
 import CadastroFuncionario from '@/pages/cadastro/CadastroFuncionario';
 import CadastroProduto from '@/pages/cadastro/CadastroProduto';
 import CadastroSetor from '@/pages/cadastro/CadastroSetor';
+import CadastroCategoria from '@/pages/cadastro/CadastroCategoria';
 import NovoPedido from '@/pages/vendas/NovoPedido';
 import ControleEstoque from '@/pages/estoque/ControleEstoque';
 import authService from '@/services/authService';
@@ -37,6 +38,7 @@ const AppRouter: React.FC = () => {
         <Route path="/cadastro-fornecedor" element={<CadastroFornecedor />} />
         <Route path="/cadastro-funcionarios" element={<CadastroFuncionario />} />
         <Route path="/cadastro-setor" element={<CadastroSetor />} />
+        <Route path="/cadastro-categoria" element={<CadastroCategoria />} />
         <Route path="/chat" element={<Chat />} />
         <Route path="/vendas" element={<NovoPedido />} />
         <Route path="/estoque" element={<ControleEstoque />} />
