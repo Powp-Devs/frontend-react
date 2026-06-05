@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+import apiClient from './api';
 
 export interface ChatRequest {
   pergunta: string;
@@ -9,24 +9,15 @@ export interface ChatResponse {
 }
 
 class ChatService {
-  private baseUrl = `${API_BASE_URL}/consulta-ia`;
 
   async enviarPergunta(pergunta: string): Promise<string> {
     try {
-      const response = await fetch(`${this.baseUrl}/perguntar`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ pergunta }),
+      const response = await apiClient.post<ChatResponse>('/consulta-ia/perguntar', {
+        pergunta
       });
 
-      if (!response.ok) {
-        throw new Error(`Erro na requisição: ${response.statusText}`);
-      }
+      return response.resposta;
 
-      const data: ChatResponse = await response.json();
-      return data.resposta;
     } catch (error) {
       console.error('Erro ao enviar pergunta:', error);
       throw new Error(
