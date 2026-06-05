@@ -32,6 +32,7 @@ const Chat: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -91,6 +92,47 @@ const Chat: React.FC = () => {
     }
   };
 
+  //Função para fazer o upload de arquivos pro modelo
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const uploadMessageId = Date.now().toString();
+    setMessages(prev => [...prev, {
+      id: uploadMessageId,
+      type: 'user',
+      content: `📎 Enviando documento: ${file.name}...`,
+      timestamp: new Date().toLocaleTimeString('pt-br', { hour: '2-digit', minute: '2-digit' })
+    }]);
+
+    setIsLoading(true);
+
+    try {
+      const mensagemSucesso = await chatService.uploadDocumento(file);
+
+      setMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        type: 'ai',
+        content: `${mensagemSucesso}`,
+        timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      }]);
+
+    } catch(error: any) {
+      setMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        type: 'ai',
+        content: `${error.message}`,
+        timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      }]);
+    } finally {
+      setIsLoading(false);
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   return (
     <div className="chat-page">
       <Header />
@@ -125,7 +167,8 @@ const Chat: React.FC = () => {
 
         {/* Chat Area */}
         <div className="chat-area">
-          {/* Messages */}
+          
+          {/* 1. ZONA DAS MENSAGENS */}
           <div className="messages-container">
             {messages.map((message) => (
               <div key={message.id} className={`message ${message.type}-message`}>
@@ -156,9 +199,32 @@ const Chat: React.FC = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input Area */}
+          {/* 2. ZONA DE INPUT (ONDE FICA O UPLOAD, TEXTO E BOTÃO ENVIAR) */}
           <div className="input-area">
             <div className="input-container">
+              
+              {/* Input escondido para o ficheiro */}
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileUpload} 
+                style={{ display: 'none' }} 
+                accept=".pdf,.docx,.xlsx,.csv,.txt"
+              />
+              
+              {/* Botão de Anexo (Clipe) */}
+              <button 
+                className="attach-btn" 
+                onClick={() => fileInputRef.current?.click()} 
+                disabled={isLoading}
+                title="Anexar documento para a IA estudar"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                </svg>
+              </button>
+
+              {/* Caixa de Texto Original */}
               <input
                 type="text"
                 value={inputValue}
@@ -167,6 +233,8 @@ const Chat: React.FC = () => {
                 placeholder="Digite sua pergunta sobre dados da empresa..."
                 disabled={isLoading}
               />
+              
+              {/* Botão Enviar Original */}
               <button
                 className="send-btn"
                 onClick={() => handleSendMessage(inputValue)}
@@ -175,10 +243,12 @@ const Chat: React.FC = () => {
                 Enviar
               </button>
             </div>
+            
             <p className="tip-text">
               💡 Dica: Pergunte sobre vendas, fornecedores, estoque, relatórios financeiros e muito mais!
             </p>
           </div>
+
         </div>
       </div>
     </div>
