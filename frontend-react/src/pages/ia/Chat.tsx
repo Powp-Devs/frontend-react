@@ -10,13 +10,11 @@ interface Message {
   timestamp: string;
 }
 
+//Perguntas de sugestão ao usuário
 const SUGGESTED_QUESTIONS = [
-  'Qual foi o faturamento do mês passado?',
-  'Quantos fornecedores estão cadastrados?',
-  'Quais produtos estão com estoque baixo?',
-  'Mostrar vendas da última semana',
-  'Qual fornecedor tem mais produtos cadastrados?',
-  'Relatório de clientes inadimplentes',
+  'Como faz para lançar um pedido no sistema?',
+  'Quais os status que um pedido pode ter no sistema',
+  'Quais os requisitos para cadastrar um fornecedor?',
 ];
 
 const Chat: React.FC = () => {
@@ -199,11 +197,10 @@ const Chat: React.FC = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* 2. ZONA DE INPUT (ONDE FICA O UPLOAD, TEXTO E BOTÃO ENVIAR) */}
+          {/* 2. ZONA DE INPUT */}
           <div className="input-area">
             <div className="input-container">
               
-              {/* Input escondido para o ficheiro */}
               <input 
                 type="file" 
                 ref={fileInputRef} 
@@ -212,7 +209,6 @@ const Chat: React.FC = () => {
                 accept=".pdf,.docx,.xlsx,.csv,.txt"
               />
               
-              {/* Botão de Anexo (Clipe) */}
               <button 
                 className="attach-btn" 
                 onClick={() => fileInputRef.current?.click()} 
@@ -224,7 +220,6 @@ const Chat: React.FC = () => {
                 </svg>
               </button>
 
-              {/* Caixa de Texto Original */}
               <input
                 type="text"
                 value={inputValue}
@@ -234,7 +229,6 @@ const Chat: React.FC = () => {
                 disabled={isLoading}
               />
               
-              {/* Botão Enviar Original */}
               <button
                 className="send-btn"
                 onClick={() => handleSendMessage(inputValue)}
