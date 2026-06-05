@@ -15,6 +15,8 @@ export const useEmployeeManager = () => {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   // Carregar funcionários ao montar
   useEffect(() => {
@@ -24,9 +26,15 @@ export const useEmployeeManager = () => {
   const loadEmployees = async () => {
     setLoading(true);
     setError(null);
+
     try {
       const response = await funcionarioService.listar(currentPage, pageSize);
-      setEmployees(response.empregado);
+      setEmployees(response.empregado || []);
+
+      const total = response.total || 0;
+      setTotalItems(total);
+      setTotalPages(Math.ceil(total / pageSize) || 1);
+
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar funcionários');
       console.error('Erro ao carregar funcionários:', err);
@@ -204,5 +212,7 @@ export const useEmployeeManager = () => {
     getProcessedEmployees,
     loadEmployees,
     getEmployee,
+    totalItems,
+    totalPages
   };
 };
