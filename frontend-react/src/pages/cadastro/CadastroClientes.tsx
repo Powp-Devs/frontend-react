@@ -2,6 +2,7 @@ import React, { useState, FormEvent } from "react";
 import Header from "@/shared/components/layout/Header";
 import { useToastContext } from "@/components/ToastContext";
 import { useClientManager } from "@/hooks/useClientManager";
+import StepModal from "@/components/StepModal";
 import { Client, SortColumn } from "@/types/Client";
 import "@/styles/cadastroCliente.css";
 
@@ -78,6 +79,117 @@ const CadastroCliente: React.FC = () => {
     };
 
     const [formData, setFormData] = useState<Partial<Client>>(initialFormState);
+    const [currentStep, setCurrentStep] = useState(0);
+
+    const steps = [
+        { label: "Dados do Cliente" },
+        { label: "Endereço" },
+    ];
+
+    const goToNextStep = () => {
+        if (currentStep < steps.length - 1) {
+            setCurrentStep((prev) => prev + 1);
+        }
+    };
+
+    const goToPreviousStep = () => {
+        if (currentStep > 0) {
+            setCurrentStep((prev) => prev - 1);
+        }
+    };
+
+    const canAdvanceStep = () => {
+        if (currentStep === 0) {
+            return Boolean(formData.nome && formData.email);
+        }
+        return true;
+    };
+
+    const canSubmitForm = () => {
+        return Boolean(formData.nome && formData.email);
+    };
+
+    const renderStepContent = () => {
+        switch (currentStep) {
+            case 0:
+                return (
+                    <>
+                        <div className="form-group-row">
+                            <div className="form-group">
+                                <label>Nome Completo *</label>
+                                <input
+                                    type="text"
+                                    name="nome"
+                                    value={formData.nome}
+                                    onChange={handleFormChange}
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Email *</label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleFormChange}
+                                    required
+                                />
+                            </div>
+                        </div>
+                    </>
+                );
+
+            case 1:
+                return (
+                    <>
+                        <div className="form-group-row">
+                            <div className="form-group">
+                                <label>Telefone</label>
+                                <input
+                                    type="tel"
+                                    name="telefone"
+                                    value={formData.telefone}
+                                    onChange={handleFormChange}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Endereço</label>
+                                <input
+                                    type="text"
+                                    name="endereco"
+                                    value={formData.endereco}
+                                    onChange={handleFormChange}
+                                />
+                            </div>
+                        </div>
+                        <div className="form-group-row">
+                            <div className="form-group">
+                                <label>Cidade</label>
+                                <input
+                                    type="text"
+                                    name="cidade"
+                                    value={formData.cidade}
+                                    onChange={handleFormChange}
+                                />
+                            </div>
+                            <div className="form-group estado-group">
+                                <label>Estado</label>
+                                <input
+                                    type="text"
+                                    name="estado"
+                                    value={formData.estado}
+                                    onChange={handleFormChange}
+                                    maxLength={2}
+                                />
+                            </div>
+                        </div>
+                    </>
+                );
+
+            default:
+                return null;
+        }
+    };
 
     const filteredClients = getProcessedClients(searchTerm);
 
@@ -85,6 +197,7 @@ const CadastroCliente: React.FC = () => {
     const openNewClientModal = () => {
         setFormData(initialFormState);
         setEditingId(null);
+        setCurrentStep(0);
         setIsModalOpen(true);
     };
 
@@ -93,6 +206,7 @@ const CadastroCliente: React.FC = () => {
         if (client.id !== undefined) {
             setEditingId(client.id);
         }
+        setCurrentStep(0);
         setIsModalOpen(true);
     };
 
@@ -101,8 +215,8 @@ const CadastroCliente: React.FC = () => {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = async (e: FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = async (e?: FormEvent) => {
+        e?.preventDefault();
 
         if (!formData.nome || !formData.email) {
             alert("Preencha os campos obrigatórios (Nome e Email)");
@@ -319,111 +433,24 @@ const CadastroCliente: React.FC = () => {
 
             {/* Modal de Cadastro/Edição */}
             {isModalOpen && (
-                <div className="modal show" style={{ display: "flex" }}>
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h2>
-                                {editingId ? "Editar Cliente" : "Novo Cliente"}
-                            </h2>
-
-                            <button
-                                className="close-modal"
-                                onClick={() => setIsModalOpen(false)}
-                            >
-                                &times;
-                            </button>
-                        </div>
-
-                        <div className="modal-body">
-                            <form onSubmit={handleSubmit}>
-                                <h4>Dados do Cliente</h4>
-
-                                <div className="form-group-row">
-                                    <div className="form-group">
-                                        <label>Nome Completo *</label>
-                                        <input
-                                            type="text"
-                                            name="nome"
-                                            value={formData.nome}
-                                            onChange={handleFormChange}
-                                            required
-                                        />
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>Email *</label>
-                                        <input
-                                            type="email"
-                                            name="email"
-                                            value={formData.email}
-                                            onChange={handleFormChange}
-                                            required
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="form-group-row">
-                                    <div className="form-group">
-                                        <label>Telefone</label>
-                                        <input
-                                            type="tel"
-                                            name="telefone"
-                                            value={formData.telefone}
-                                            onChange={handleFormChange}
-                                        />
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>Endereço</label>
-                                        <input
-                                            type="text"
-                                            name="endereco"
-                                            value={formData.endereco}
-                                            onChange={handleFormChange}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="form-group-row">
-                                    <div className="form-group">
-                                        <label>Cidade</label>
-                                        <input
-                                            type="text"
-                                            name="cidade"
-                                            value={formData.cidade}
-                                            onChange={handleFormChange}
-                                        />
-                                    </div>
-
-                                    <div className="form-group estado-group">
-                                        <label>Estado</label>
-                                        <input
-                                            type="text"
-                                            name="estado"
-                                            value={formData.estado}
-                                            onChange={handleFormChange}
-                                            maxLength={2}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="form-group actions">
-                                    <button
-                                        type="button"
-                                        className="btn btn-secondary"
-                                        onClick={() => setIsModalOpen(false)}
-                                    >
-                                        Cancelar
-                                    </button>
-
-                                    <button type="submit" className="btn btn-primary">
-                                        Salvar
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+                <StepModal
+                    isOpen={isModalOpen}
+                    title={editingId ? "Editar Cliente" : "Novo Cliente"}
+                    steps={steps}
+                    activeStep={currentStep}
+                    onClose={() => setIsModalOpen(false)}
+                    onBack={goToPreviousStep}
+                    onNext={goToNextStep}
+                    onSubmit={handleSubmit}
+                    disableNext={!canAdvanceStep()}
+                    disableSubmit={!canSubmitForm()}
+                    isSubmitting={false}
+                    submitLabel={editingId ? "Atualizar" : "Salvar"}
+                >
+                    <form>
+                        {renderStepContent()}
+                    </form>
+                </StepModal>
             )}
 
             {/* Modal de Confirmação de Exclusão */}

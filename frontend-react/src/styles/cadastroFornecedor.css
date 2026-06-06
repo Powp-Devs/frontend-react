@@ -321,7 +321,6 @@
   .modal-content {
     background-color: var(--background-white);
     border-radius: var(--border-radius);
-    width: 500px;
     max-width: 90%;
     box-shadow: var(--shadow-lg);
     animation: slideIn 0.3s;

@@ -16,9 +16,9 @@ const formatISODate = (date: Date): string => {
   return date.toISOString().split('T')[0];
 };
 
-const mapBackendClient = (cliente: any, contatos: any[], enderecos: any[]): Client => {
-  const contato = contatos.find((c) => c.codcontato === cliente.codtelefone) || {};
-  const endereco = enderecos.find((e) => e.codendereco === cliente.codendereco) || {};
+const mapBackendClient = (cliente: any): Client => {
+  const contato = cliente.contato || {};
+  const endereco = cliente.endereco || {};
 
   return {
     id: cliente.codcliente,
@@ -35,10 +35,8 @@ const mapBackendClient = (cliente: any, contatos: any[], enderecos: any[]): Clie
 };
 
 const mapBackendClients = (response: any): Client[] => {
-  const clientes = response?.cliente || [];
-  const contatos = response?.contato || [];
-  const enderecos = response?.endereco || [];
-  return clientes.map((cliente: any) => mapBackendClient(cliente, contatos, enderecos));
+  const clientes = response?.data || [];
+  return clientes.map((cliente: any) => mapBackendClient(cliente));
 };
 
 const createClientePayload = (clientData: Partial<Client>) => ({

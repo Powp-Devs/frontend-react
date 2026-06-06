@@ -210,8 +210,8 @@
     box-shadow: var(--shadow-2xl); max-height: 92vh; overflow-y: auto;
     animation: slideIn 0.22s ease; display: flex; flex-direction: column; width: 100%;
 }
-.estoque-modal { max-width: 560px; }
-.detail-modal  { max-width: 600px; }
+.estoque-modal { max-width: 95vw; }
+.detail-modal  { max-width: 95vw; }
 .delete-modal  { max-width: 420px; }
 
 /* Cabecalho */
