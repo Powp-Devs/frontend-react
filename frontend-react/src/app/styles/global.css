@@ -1,4 +1,5 @@
 @import "../../styles/global.css";
+@import "../../styles/modalShared.css";
 
 :root {
   --primary-color: #2c3e50;

@@ -361,14 +361,20 @@
     gap: 12px;
     margin-top: auto; 
     padding-top: 16px;
-    padding-bottom: 4px;
+    padding-bottom: 12px;
     border-top: 1px solid var(--color-border);
     
     position: sticky;
-    bottom: -24px;
+    bottom: 0;
     background: var(--color-surface); 
     z-index: 10;
 }
+
+/* Prevent modal content from scrolling under the sticky footer */
+.product-modal .modal-body { padding-bottom: 60px; }
+.product-modal .modal-body textarea { min-height: 80px; }
+.lookup-modal .modal-body { padding-bottom: 72px; }
+.delete-modal .modal-body { padding-bottom: 72px; }
 
 /* ── Modal lookup (fornecedor/categoria) ───────────────────── */
 .lookup-search-bar {

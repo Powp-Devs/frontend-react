@@ -4,6 +4,7 @@ import { useSupplierManager } from "@/hooks/useSupplierManager";
 import { Supplier, SortColumn } from "@/types/Supplier";
 import { useToast } from "@/hooks/useToast";
 import { ToastContainer } from "@/components/ToastContainer";
+import StepModal from "@/components/StepModal";
 import "@/styles/cadastroFornecedor.css";
 
 // -------------------------------------------------------
@@ -59,17 +60,16 @@ const CadastroFornecedor: React.FC = () => {
     const [isDeleteModalOpen, setIsDeleteModalOpen]     = useState(false);
     const [editingId, setEditingId]                     = useState<number | null>(null);
     const [supplierToDelete, setSupplierToDelete]       = useState<number | null>(null);
+    const [currentStep, setCurrentStep]                 = useState(0);
     const [isSubmitting, setIsSubmitting]               = useState(false);
     const [submitError, setSubmitError]                 = useState<string | null>(null);
 
-    // ── Estado inicial do formulário — espelha Supplier.ts ─
     const initialFormState: Partial<Supplier> = {
-        // Dados do fornecedor
         fornecedor:          "",
         fantasia:            "",
         cnpj:                "",
         inscricaoestadual:   "",
-        tipopessoa:          "J",       // padrão: Pessoa Jurídica
+        tipopessoa:          "J",
         dtcadastro:          new Date().toISOString().split("T")[0],
         obs:                 "",
         bloqueio:            "N",
@@ -77,7 +77,6 @@ const CadastroFornecedor: React.FC = () => {
         dtbloqueio:          "",
         nome_representante:  "",
         cpf_representante:   "",
-        // Endereço
         cep:                 "",
         logradouro:          "",
         numero:              "",
@@ -85,7 +84,6 @@ const CadastroFornecedor: React.FC = () => {
         cidade:              "",
         uf:                  "",
         pais:                "BR",
-        // Contato
         telefone:            "",
         celular:             "",
         email:               "",
@@ -94,6 +92,309 @@ const CadastroFornecedor: React.FC = () => {
 
     const [formData, setFormData] = useState<Partial<Supplier>>(initialFormState);
 
+    const steps = [
+      { label: "Dados do Fornecedor" },
+      { label: "Representante" },
+      { label: "Endereço" },
+      { label: "Contato e Observações" },
+    ];
+
+    const goToNextStep = () => {
+      if (currentStep < steps.length - 1) {
+        setCurrentStep((prev) => prev + 1);
+      }
+    };
+
+    const goToPreviousStep = () => {
+      if (currentStep > 0) {
+        setCurrentStep((prev) => prev - 1);
+      }
+    };
+
+    const canAdvanceStep = () => {
+      if (currentStep === 0) {
+        return Boolean(formData.fornecedor && formData.cnpj);
+      }
+      if (currentStep === 2) {
+        return Boolean(formData.cep && formData.logradouro && formData.bairro && formData.cidade);
+      }
+      return true;
+    };
+
+    const canSubmitForm = () => {
+      return Boolean(
+        formData.fornecedor &&
+        formData.cnpj &&
+        formData.email &&
+        formData.cep &&
+        formData.logradouro &&
+        formData.bairro &&
+        formData.cidade
+      );
+    };
+
+    const renderStepContent = () => {
+      switch (currentStep) {
+        case 0:
+          return (
+            <>
+              <div className="form-group-row">
+                <div className="form-group">
+                  <label>Tipo de Pessoa *</label>
+                  <select
+                    name="tipopessoa"
+                    value={formData.tipopessoa || "J"}
+                    onChange={handleFormChange}
+                  >
+                    <option value="J">Pessoa Jurídica</option>
+                    <option value="F">Pessoa Física</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>{formData.tipopessoa === "F" ? "CPF *" : "CNPJ *"}</label>
+                  <input
+                    type="text"
+                    name="cnpj"
+                    value={formData.cnpj || ""}
+                    onChange={handleFormChange}
+                    placeholder={formData.tipopessoa === "F" ? "000.000.000-00" : "00.000.000/0000-00"}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-group-row">
+                <div className="form-group">
+                  <label>Razão Social *</label>
+                  <input
+                    type="text"
+                    name="fornecedor"
+                    value={formData.fornecedor || ""}
+                    onChange={handleFormChange}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Nome Fantasia</label>
+                  <input
+                    type="text"
+                    name="fantasia"
+                    value={formData.fantasia || ""}
+                    onChange={handleFormChange}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group-row">
+                <div className="form-group">
+                  <label>Inscrição Estadual</label>
+                  <input
+                    type="text"
+                    name="inscricaoestadual"
+                    value={formData.inscricaoestadual || ""}
+                    onChange={handleFormChange}
+                    placeholder="Isento ou número"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Data de Cadastro</label>
+                  <input
+                    type="date"
+                    name="dtcadastro"
+                    value={formData.dtcadastro || ""}
+                    onChange={handleFormChange}
+                  />
+                </div>
+              </div>
+            </>
+          );
+
+        case 1:
+          return (
+            <>
+              <div className="form-group-row">
+                <div className="form-group">
+                  <label>Nome do Representante</label>
+                  <input
+                    type="text"
+                    name="nome_representante"
+                    value={formData.nome_representante || ""}
+                    onChange={handleFormChange}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>CPF do Representante</label>
+                  <input
+                    type="text"
+                    name="cpf_representante"
+                    value={formData.cpf_representante || ""}
+                    onChange={handleFormChange}
+                    placeholder="000.000.000-00"
+                  />
+                </div>
+              </div>
+            </>
+          );
+
+        case 2:
+          return (
+            <>
+              <div className="form-group-row">
+                <div className="form-group cep-group">
+                  <label>CEP *</label>
+                  <input
+                    type="text"
+                    name="cep"
+                    value={formData.cep || ""}
+                    onChange={handleFormChange}
+                    placeholder="00000-000"
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Logradouro *</label>
+                  <input
+                    type="text"
+                    name="logradouro"
+                    value={formData.logradouro || ""}
+                    onChange={handleFormChange}
+                    required
+                  />
+                </div>
+
+                <div className="form-group numero-group">
+                  <label>Número</label>
+                  <input
+                    type="text"
+                    name="numero"
+                    value={formData.numero || ""}
+                    onChange={handleFormChange}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group-row">
+                <div className="form-group">
+                  <label>Bairro *</label>
+                  <input
+                    type="text"
+                    name="bairro"
+                    value={formData.bairro || ""}
+                    onChange={handleFormChange}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Cidade *</label>
+                  <input
+                    type="text"
+                    name="cidade"
+                    value={formData.cidade || ""}
+                    onChange={handleFormChange}
+                    required
+                  />
+                </div>
+
+                <div className="form-group estado-group">
+                  <label>UF</label>
+                  <input
+                    type="text"
+                    name="uf"
+                    value={formData.uf || ""}
+                    onChange={handleFormChange}
+                    placeholder="SP"
+                    maxLength={2}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>País</label>
+                  <input
+                    type="text"
+                    name="pais"
+                    value={formData.pais || ""}
+                    onChange={handleFormChange}
+                    placeholder="Brasil"
+                  />
+                </div>
+              </div>
+            </>
+          );
+
+        case 3:
+          return (
+            <>
+              <div className="form-group-row">
+                <div className="form-group">
+                  <label>E-mail *</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email || ""}
+                    onChange={handleFormChange}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>E-mail Secundário</label>
+                  <input
+                    type="email"
+                    name="email2"
+                    value={formData.email2 || ""}
+                    onChange={handleFormChange}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group-row">
+                <div className="form-group">
+                  <label>Telefone</label>
+                  <input
+                    type="tel"
+                    name="telefone"
+                    value={formData.telefone || ""}
+                    onChange={handleFormChange}
+                    placeholder="(11) 3333-4444"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Celular</label>
+                  <input
+                    type="tel"
+                    name="celular"
+                    value={formData.celular || ""}
+                    onChange={handleFormChange}
+                    placeholder="(11) 99999-9999"
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Observação</label>
+                <textarea
+                  name="obs"
+                  value={formData.obs || ""}
+                  onChange={handleFormChange}
+                  rows={3}
+                  placeholder="Observações sobre o fornecedor..."
+                />
+              </div>
+            </>
+          );
+
+        default:
+          return null;
+      }
+    };
+
     const filteredSuppliers = getProcessedSuppliers(searchTerm);
 
     // ── Handlers do modal ──────────────────────────────────
@@ -101,6 +402,7 @@ const CadastroFornecedor: React.FC = () => {
         setFormData(initialFormState);
         setEditingId(null);
         setSubmitError(null);
+        setCurrentStep(0);
         setIsModalOpen(true);
     };
 
@@ -110,6 +412,7 @@ const CadastroFornecedor: React.FC = () => {
             .then((fullData) => {
                 setFormData(fullData);
                 setEditingId(supplier.codfornecedor);
+                setCurrentStep(0);
                 setSubmitError(null);
                 setIsModalOpen(true);
             })
@@ -131,8 +434,8 @@ const CadastroFornecedor: React.FC = () => {
     };
 
     // ── Submit ─────────────────────────────────────────────
-    const handleFormSubmit = async (e: FormEvent) => {
-        e.preventDefault();
+    const handleFormSubmit = async (e?: FormEvent) => {
+        e?.preventDefault();
         setSubmitError(null);
 
         // Validação — campos obrigatórios
@@ -357,358 +660,68 @@ const CadastroFornecedor: React.FC = () => {
                 </section>
 
                 {/* ── Modal cadastro / edição ───────────────────────── */}
-                {isModalOpen && (
-                    <div className="modal-show" style={{ display: "flex" }}>
-                        <div className="modal-content">
-                            <div className="modal-header">
-                                <h2>
-                                    {editingId ? "Editar Fornecedor" : "Novo Fornecedor"}
-                                </h2>
-                                <button
-                                    className="close-modal"
-                                    onClick={() => setIsModalOpen(false)}
-                                    disabled={isSubmitting}
+                <StepModal
+                    isOpen={isModalOpen}
+                    title={editingId ? "Editar Fornecedor" : "Novo Fornecedor"}
+                    steps={steps}
+                    activeStep={currentStep}
+                    onClose={() => setIsModalOpen(false)}
+                    onBack={goToPreviousStep}
+                    onNext={goToNextStep}
+                    onSubmit={handleFormSubmit}
+                    disableNext={!canAdvanceStep()}
+                    disableSubmit={!canSubmitForm()}
+                    isSubmitting={isSubmitting}
+                    submitLabel={editingId ? "Atualizar" : "Salvar"}
+                >
+                    {submitError && (
+                        <div className="error-message" role="alert">
+                            {submitError}
+                        </div>
+                    )}
+
+                    {renderStepContent()}
+
+                    {editingId && currentStep === steps.length - 1 && (
+                        <div className="form-group-row">
+                            <div className="form-group">
+                                <label>Bloqueado?</label>
+                                <select
+                                    name="bloqueio"
+                                    value={formData.bloqueio || "N"}
+                                    onChange={handleFormChange}
                                 >
-                                    &times;
-                                </button>
+                                    <option value="N">Não</option>
+                                    <option value="S">Sim</option>
+                                </select>
                             </div>
 
-                            <div className="modal-body">
-                                {submitError && (
-                                    <div className="error-message" role="alert">
-                                        {submitError}
-                                    </div>
-                                )}
-
-                                <form onSubmit={handleFormSubmit}>
-
-                                    {/* ── Dados do Fornecedor ───────────────────── */}
-                                    <h4>Dados do Fornecedor</h4>
-
-                                    <div className="form-group-row">
-                                        <div className="form-group">
-                                            <label>Tipo de Pessoa *</label>
-                                            <select
-                                                name="tipopessoa"
-                                                value={formData.tipopessoa || "J"}
-                                                onChange={handleFormChange}
-                                            >
-                                                <option value="J">Pessoa Jurídica</option>
-                                                <option value="F">Pessoa Física</option>
-                                            </select>
-                                        </div>
-
-                                        <div className="form-group">
-                                            <label>
-                                                {formData.tipopessoa === "F" ? "CPF *" : "CNPJ *"}
-                                            </label>
-                                            <input
-                                                type="text"
-                                                name="cnpj"
-                                                value={formData.cnpj || ""}
-                                                onChange={handleFormChange}
-                                                placeholder={
-                                                    formData.tipopessoa === "F"
-                                                        ? "000.000.000-00"
-                                                        : "00.000.000/0000-00"
-                                                }
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="form-group-row">
-                                        <div className="form-group">
-                                            <label>Razão Social *</label>
-                                            <input
-                                                type="text"
-                                                name="fornecedor"
-                                                value={formData.fornecedor || ""}
-                                                onChange={handleFormChange}
-                                                required
-                                            />
-                                        </div>
-
-                                        <div className="form-group">
-                                            <label>Nome Fantasia</label>
-                                            <input
-                                                type="text"
-                                                name="fantasia"
-                                                value={formData.fantasia || ""}
-                                                onChange={handleFormChange}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="form-group-row">
-                                        <div className="form-group">
-                                            <label>Inscrição Estadual</label>
-                                            <input
-                                                type="text"
-                                                name="inscricaoestadual"
-                                                value={formData.inscricaoestadual || ""}
-                                                onChange={handleFormChange}
-                                                placeholder="Isento ou número"
-                                            />
-                                        </div>
-
-                                        <div className="form-group">
-                                            <label>Data de Cadastro</label>
-                                            <input
-                                                type="date"
-                                                name="dtcadastro"
-                                                value={formData.dtcadastro || ""}
-                                                onChange={handleFormChange}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* ── Representante ─────────────────────────── */}
-                                    <h4>Representante</h4>
-
-                                    <div className="form-group-row">
-                                        <div className="form-group">
-                                            <label>Nome do Representante</label>
-                                            <input
-                                                type="text"
-                                                name="nome_representante"
-                                                value={formData.nome_representante || ""}
-                                                onChange={handleFormChange}
-                                            />
-                                        </div>
-
-                                        <div className="form-group">
-                                            <label>CPF do Representante</label>
-                                            <input
-                                                type="text"
-                                                name="cpf_representante"
-                                                value={formData.cpf_representante || ""}
-                                                onChange={handleFormChange}
-                                                placeholder="000.000.000-00"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* ── Endereço ──────────────────────────────── */}
-                                    <h4>Endereço</h4>
-
-                                    <div className="form-group-row">
-                                        <div className="form-group cep-group">
-                                            <label>CEP *</label>
-                                            <input
-                                                type="text"
-                                                name="cep"
-                                                value={formData.cep || ""}
-                                                onChange={handleFormChange}
-                                                placeholder="00000-000"
-                                                required
-                                            />
-                                        </div>
-
-                                        <div className="form-group">
-                                            <label>Logradouro *</label>
-                                            <input
-                                                type="text"
-                                                name="logradouro"
-                                                value={formData.logradouro || ""}
-                                                onChange={handleFormChange}
-                                                required
-                                            />
-                                        </div>
-
-                                        <div className="form-group numero-group">
-                                            <label>Número</label>
-                                            <input
-                                                type="text"
-                                                name="numero"
-                                                value={formData.numero || ""}
-                                                onChange={handleFormChange}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="form-group-row">
-                                        <div className="form-group">
-                                            <label>Bairro *</label>
-                                            <input
-                                                type="text"
-                                                name="bairro"
-                                                value={formData.bairro || ""}
-                                                onChange={handleFormChange}
-                                                required
-                                            />
-                                        </div>
-
-                                        <div className="form-group">
-                                            <label>Cidade *</label>
-                                            <input
-                                                type="text"
-                                                name="cidade"
-                                                value={formData.cidade || ""}
-                                                onChange={handleFormChange}
-                                                required
-                                            />
-                                        </div>
-
-                                        <div className="form-group estado-group">
-                                            <label>UF</label>
-                                            <input
-                                                type="text"
-                                                name="uf"
-                                                value={formData.uf || ""}
-                                                onChange={handleFormChange}
-                                                placeholder="SP"
-                                                maxLength={2}
-                                            />
-                                        </div>
-
-                                        <div className="form-group">
-                                            <label>País</label>
-                                            <input
-                                                type="text"
-                                                name="pais"
-                                                value={formData.pais || ""}
-                                                onChange={handleFormChange}
-                                                placeholder="Brasil"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* ── Contato ───────────────────────────────── */}
-                                    <h4>Contato</h4>
-
-                                    <div className="form-group-row">
-                                        <div className="form-group">
-                                            <label>E-mail *</label>
-                                            <input
-                                                type="email"
-                                                name="email"
-                                                value={formData.email || ""}
-                                                onChange={handleFormChange}
-                                                required
-                                            />
-                                        </div>
-
-                                        <div className="form-group">
-                                            <label>E-mail Secundário</label>
-                                            <input
-                                                type="email"
-                                                name="email2"
-                                                value={formData.email2 || ""}
-                                                onChange={handleFormChange}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="form-group-row">
-                                        <div className="form-group">
-                                            <label>Telefone</label>
-                                            <input
-                                                type="tel"
-                                                name="telefone"
-                                                value={formData.telefone || ""}
-                                                onChange={handleFormChange}
-                                                placeholder="(11) 3333-4444"
-                                            />
-                                        </div>
-
-                                        <div className="form-group">
-                                            <label>Celular</label>
-                                            <input
-                                                type="tel"
-                                                name="celular"
-                                                value={formData.celular || ""}
-                                                onChange={handleFormChange}
-                                                placeholder="(11) 99999-9999"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* ── Observações ───────────────────────────── */}
-                                    <h4>Observações</h4>
-
+                            {formData.bloqueio === "S" && (
+                                <>
                                     <div className="form-group">
-                                        <label>Observação</label>
-                                        <textarea
-                                            name="obs"
-                                            value={formData.obs || ""}
+                                        <label>Motivo do Bloqueio</label>
+                                        <input
+                                            type="text"
+                                            name="motivo_bloq"
+                                            value={formData.motivo_bloq || ""}
                                             onChange={handleFormChange}
-                                            rows={3}
-                                            placeholder="Observações sobre o fornecedor..."
                                         />
                                     </div>
 
-                                    {/*
-                                      Bloqueio — exibido apenas no modo edição.
-                                      Não faz sentido bloquear um fornecedor no ato do cadastro.
-                                    */}
-                                    {editingId && (
-                                        <>
-                                            <h4>Bloqueio</h4>
-
-                                            <div className="form-group-row">
-                                                <div className="form-group">
-                                                    <label>Bloqueado?</label>
-                                                    <select
-                                                        name="bloqueio"
-                                                        value={formData.bloqueio || "N"}
-                                                        onChange={handleFormChange}
-                                                    >
-                                                        <option value="N">Não</option>
-                                                        <option value="S">Sim</option>
-                                                    </select>
-                                                </div>
-
-                                                {formData.bloqueio === "S" && (
-                                                    <>
-                                                        <div className="form-group">
-                                                            <label>Motivo do Bloqueio</label>
-                                                            <input
-                                                                type="text"
-                                                                name="motivo_bloq"
-                                                                value={formData.motivo_bloq || ""}
-                                                                onChange={handleFormChange}
-                                                            />
-                                                        </div>
-
-                                                        <div className="form-group">
-                                                            <label>Data do Bloqueio</label>
-                                                            <input
-                                                                type="date"
-                                                                name="dtbloqueio"
-                                                                value={formData.dtbloqueio || ""}
-                                                                onChange={handleFormChange}
-                                                            />
-                                                        </div>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </>
-                                    )}
-
-                                    {/* ── Ações ─────────────────────────────────── */}
-                                    <div className="form-group actions">
-                                        <button
-                                            type="button"
-                                            className="btn btn-secondary"
-                                            onClick={() => setIsModalOpen(false)}
-                                            disabled={isSubmitting}
-                                        >
-                                            Cancelar
-                                        </button>
-                                        <button
-                                            type="submit"
-                                            className="btn btn-primary"
-                                            disabled={isSubmitting}
-                                        >
-                                            {isSubmitting ? "Salvando..." : "Salvar"}
-                                        </button>
+                                    <div className="form-group">
+                                        <label>Data do Bloqueio</label>
+                                        <input
+                                            type="date"
+                                            name="dtbloqueio"
+                                            value={formData.dtbloqueio || ""}
+                                            onChange={handleFormChange}
+                                        />
                                     </div>
-                                </form>
-                            </div>
+                                </>
+                            )}
                         </div>
-                    </div>
-                )}
+                    )}
+                </StepModal>
 
                 {/* ── Modal de confirmação de exclusão ─────────────── */}
                 {isDeleteModalOpen && (
