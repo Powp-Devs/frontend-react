@@ -72,6 +72,7 @@ const menuItems: MenuItem[] = [
       { label: 'Funcionários', path: '/cadastro-funcionarios' },
       { label: 'Setores',      path: '/cadastro-setor' },
       { label: 'Categorias',   path: '/cadastro-categoria' },
+      { label: 'Usuários',     path: '/cadastro-usuario' },
     ],
   },
   {
