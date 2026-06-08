@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate} from 'react-router-dom';
 import { observer } from 'mobx-react-lite';
 import clsx from 'clsx';
 import '../styles/sidebar.css';
@@ -94,6 +94,7 @@ const menuItems: MenuItem[] = [
 
 const Sidebar: React.FC = observer(() => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const isCadastroActive = menuItems
     .find(i => i.label === 'Cadastro')
@@ -108,8 +109,11 @@ const Sidebar: React.FC = observer(() => {
   };
 
   const handleLogout = () => {
-    authService.logout();
-    navigate('/login', { replace: true });
+    localStorage.removeItem('token');
+    localStorage.clear();
+
+    sessionStorage.clear();
+    navigate('login', { replace: true });
   };
 
   return (
