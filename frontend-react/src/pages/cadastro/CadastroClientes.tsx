@@ -51,8 +51,7 @@ const CadastroCliente: React.FC = () => {
         addClient,
         updateClient,
         deleteClient,
-        toggleSelection,
-        toggleSelectAll,
+    getClientById,
         handleSort,
         exportToCSV,
         getProcessedClients,
@@ -62,20 +61,49 @@ const CadastroCliente: React.FC = () => {
 
     const { success, error: showError } = useToastContext();
 
+    const getErrorMessage = (err: any) => {
+        const detail = err?.response?.data?.detail;
+        if (typeof detail === 'string') return detail;
+        if (Array.isArray(detail)) {
+            return detail
+                .map((item) => {
+                    if (typeof item === 'string') return item;
+                    if (item?.msg) return item.msg;
+                    if (typeof item === 'object') return Object.values(item).flat().join(', ');
+                    return JSON.stringify(item);
+                })
+                .filter(Boolean)
+                .join(' | ');
+        }
+        if (detail && typeof detail === 'object') {
+            return detail.message || JSON.stringify(detail);
+        }
+        return err?.message || 'Verifique os dados e tente novamente.';
+    };
+
     const [searchTerm, setSearchTerm] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [clientToDelete, setClientToDelete] = useState<number | null>(null);
+    const [isEditLoading, setIsEditLoading] = useState(false);
 
     // Estado do Formulário
     const initialFormState: Partial<Client> = {
         nome: "",
         email: "",
+        email2: "",
         telefone: "",
-        endereco: "",
+        celular: "",
+        tipo_pessoa: "fisica",
+        cpf_cnpj: "",
+        logradouro: "",
+        numero: "",
+        bairro: "",
         cidade: "",
         estado: "",
+        pais: "BR",
+        cep: "",
     };
 
     const [formData, setFormData] = useState<Partial<Client>>(initialFormState);
@@ -100,13 +128,21 @@ const CadastroCliente: React.FC = () => {
 
     const canAdvanceStep = () => {
         if (currentStep === 0) {
-            return Boolean(formData.nome && formData.email);
+            return Boolean(formData.nome && formData.email && formData.cpf_cnpj);
         }
         return true;
     };
 
     const canSubmitForm = () => {
-        return Boolean(formData.nome && formData.email);
+        return Boolean(
+            formData.nome &&
+            formData.email &&
+            formData.cpf_cnpj &&
+            formData.cep &&
+            formData.logradouro &&
+            formData.bairro &&
+            formData.cidade
+        );
     };
 
     const renderStepContent = () => {
@@ -120,7 +156,7 @@ const CadastroCliente: React.FC = () => {
                                 <input
                                     type="text"
                                     name="nome"
-                                    value={formData.nome}
+                                    value={formData.nome || ''}
                                     onChange={handleFormChange}
                                     required
                                 />
@@ -130,11 +166,144 @@ const CadastroCliente: React.FC = () => {
                                 <input
                                     type="email"
                                     name="email"
-                                    value={formData.email}
+                                    value={formData.email || ''}
                                     onChange={handleFormChange}
                                     required
                                 />
                             </div>
+                        </div>
+
+                        <div className="form-group-row">
+                            <div className="form-group">
+                                <label>Email Secundário</label>
+                                <input
+                                    type="email"
+                                    name="email2"
+                                    value={formData.email2 || ''}
+                                    onChange={handleFormChange}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Telefone</label>
+                                <input
+                                    type="tel"
+                                    name="telefone"
+                                    value={formData.telefone || ''}
+                                    onChange={handleFormChange}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="form-group-row">
+                            <div className="form-group">
+                                <label>Celular</label>
+                                <input
+                                    type="tel"
+                                    name="celular"
+                                    value={formData.celular || ''}
+                                    onChange={handleFormChange}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Tipo de Pessoa</label>
+                                <select
+                                    name="tipo_pessoa"
+                                    value={formData.tipo_pessoa || 'fisica'}
+                                    onChange={handleFormChange}
+                                >
+                                    <option value="fisica">Pessoa Física</option>
+                                    <option value="juridica">Pessoa Jurídica</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="form-group-row">
+                            <div className="form-group">
+                                <label>{formData.tipo_pessoa === 'juridica' ? 'CNPJ *' : 'CPF *'}</label>
+                                <input
+                                    type="text"
+                                    name="cpf_cnpj"
+                                    value={formData.cpf_cnpj || ''}
+                                    onChange={handleFormChange}
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="form-group-row">
+                            <div className="form-group">
+                                <label>Nome Fantasia</label>
+                                <input
+                                    type="text"
+                                    name="fantasia"
+                                    value={formData.fantasia || ''}
+                                    onChange={handleFormChange}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Inscrição Estadual</label>
+                                <input
+                                    type="text"
+                                    name="inscricaoestadual"
+                                    value={formData.inscricaoestadual || ''}
+                                    onChange={handleFormChange}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="form-group-row">
+                            <div className="form-group">
+                                <label>{formData.tipo_pessoa === 'juridica' ? 'Data de Abertura' : 'Data de Nascimento'}</label>
+                                <input
+                                    type="date"
+                                    name={formData.tipo_pessoa === 'juridica' ? 'dtabertura' : 'dt_nascimento'}
+                                    value={formData.tipo_pessoa === 'juridica' ? formData.dtabertura || '' : formData.dt_nascimento || ''}
+                                    onChange={handleFormChange}
+                                />
+                            </div>
+                            {formData.tipo_pessoa === 'fisica' && (
+                                <div className="form-group">
+                                    <label>RG</label>
+                                    <input
+                                        type="text"
+                                        name="rg"
+                                        value={formData.rg || ''}
+                                        onChange={handleFormChange}
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="form-group-row">
+                            <div className="form-group">
+                                <label>Bloqueado</label>
+                                <select
+                                    name="bloqueio"
+                                    value={formData.bloqueio || 'N'}
+                                    onChange={handleFormChange}
+                                >
+                                    <option value="N">Não</option>
+                                    <option value="S">Sim</option>
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>Motivo Bloqueio</label>
+                                <input
+                                    type="text"
+                                    name="motivo_bloq"
+                                    value={formData.motivo_bloq || ''}
+                                    onChange={handleFormChange}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="form-group">
+                            <label>Observações</label>
+                            <textarea
+                                name="obs"
+                                value={formData.obs || ''}
+                                onChange={handleFormChange}
+                            />
                         </div>
                     </>
                 );
@@ -143,33 +312,56 @@ const CadastroCliente: React.FC = () => {
                 return (
                     <>
                         <div className="form-group-row">
-                            <div className="form-group">
-                                <label>Telefone</label>
+                            <div className="form-group cep-group">
+                                <label>CEP *</label>
                                 <input
-                                    type="tel"
-                                    name="telefone"
-                                    value={formData.telefone}
+                                    type="text"
+                                    name="cep"
+                                    value={formData.cep || ''}
                                     onChange={handleFormChange}
+                                    placeholder="00000-000"
+                                    required
                                 />
                             </div>
                             <div className="form-group">
-                                <label>Endereço</label>
+                                <label>Logradouro *</label>
                                 <input
                                     type="text"
-                                    name="endereco"
-                                    value={formData.endereco}
+                                    name="logradouro"
+                                    value={formData.logradouro || ''}
+                                    onChange={handleFormChange}
+                                    required
+                                />
+                            </div>
+                            <div className="form-group numero-group">
+                                <label>Número</label>
+                                <input
+                                    type="text"
+                                    name="numero"
+                                    value={formData.numero || ''}
                                     onChange={handleFormChange}
                                 />
                             </div>
                         </div>
                         <div className="form-group-row">
                             <div className="form-group">
-                                <label>Cidade</label>
+                                <label>Bairro *</label>
+                                <input
+                                    type="text"
+                                    name="bairro"
+                                    value={formData.bairro || ''}
+                                    onChange={handleFormChange}
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Cidade *</label>
                                 <input
                                     type="text"
                                     name="cidade"
-                                    value={formData.cidade}
+                                    value={formData.cidade || ''}
                                     onChange={handleFormChange}
+                                    required
                                 />
                             </div>
                             <div className="form-group estado-group">
@@ -177,9 +369,19 @@ const CadastroCliente: React.FC = () => {
                                 <input
                                     type="text"
                                     name="estado"
-                                    value={formData.estado}
+                                    value={formData.estado || ''}
                                     onChange={handleFormChange}
                                     maxLength={2}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>País</label>
+                                <input
+                                    type="text"
+                                    name="pais"
+                                    value={formData.pais || 'BR'}
+                                    onChange={handleFormChange}
+                                    placeholder="BR"
                                 />
                             </div>
                         </div>
@@ -201,16 +403,27 @@ const CadastroCliente: React.FC = () => {
         setIsModalOpen(true);
     };
 
-    const openEditModal = (client: Partial<Client>) => {
-        setFormData(client);
-        if (client.id !== undefined) {
+    const openEditModal = async (client: Partial<Client>) => {
+        if (client.id === undefined) return;
+
+        setIsEditLoading(true);
+        try {
+            const fullClient = await getClientById(client.id);
+            setFormData(fullClient);
             setEditingId(client.id);
+            setCurrentStep(0);
+            setIsModalOpen(true);
+        } catch (err: any) {
+            showError(
+                'Erro ao carregar cliente',
+                getErrorMessage(err)
+            );
+        } finally {
+            setIsEditLoading(false);
         }
-        setCurrentStep(0);
-        setIsModalOpen(true);
     };
 
-    const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
@@ -235,7 +448,7 @@ const CadastroCliente: React.FC = () => {
         } catch (err: any) {
             showError(
                 "Erro ao salvar cliente",
-                err?.response?.data?.detail || "Verifique os dados e tente novamente."
+                getErrorMessage(err)
             );
         }
     };
@@ -256,7 +469,7 @@ const CadastroCliente: React.FC = () => {
             } catch (err: any) {
                 showError(
                     "Erro ao excluir cliente",
-                    err?.response?.data?.detail || "Não foi possível deletar o cliente."
+                    getErrorMessage(err)
                 );
             }
         }
@@ -394,6 +607,7 @@ const CadastroCliente: React.FC = () => {
                                                 onClick={() =>
                                                     openEditModal(client)
                                                 }
+                                                disabled={isEditLoading}
                                             >
                                                 <EditIcon />
                                             </button>

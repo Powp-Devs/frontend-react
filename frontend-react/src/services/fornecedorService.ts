@@ -12,17 +12,14 @@ interface ApiResponse<T> {
 }
 
 /**
- * Resposta de list_fornecedor: backend retorna três arrays separados.
- * endereco e contato são indexados por codendereco / codcontato,
- * referenciados no objeto Fornecedor via codendereco / codtelefone.
+ * Resposta de list_fornecedor: backend retorna o payload padrão com data[].
+ * Cada item já vem com endereço e contato aninhados.
  */
 interface PaginatedResponse {
-    fornecedor: any[];
-    endereco:   any[];
-    contato:    any[];
-    total:      number;
-    page:       number;
-    per_page:   number;
+    data:    any[];
+    total:   number;
+    page:    number;
+    per_page: number;
 }
 
 // -------------------------------------------------------
@@ -72,29 +69,14 @@ export const fornecedorService = {
     /**
      * Listar com paginação.
      * Rota correta: GET /fornecedor/listar?page=&per_page=   (não /fornecedor)
-     * O backend retorna arrays separados de fornecedor, endereco e contato.
-     * Aqui fazemos o join para que cada Supplier chegue completo ao hook.
+     * O backend retorna um payload padrão com data[] contendo fornecedores completos.
      */
     async listar(page = 1, perPage = 10): Promise<{ suppliers: Supplier[]; total: number; page: number; perPage: number }> {
-        const response = await apiClient.get<PaginatedResponse>('/fornecedor/listar', {
-            params: { page, per_page: perPage },   // ← corrigido: per_page (não pageSize)
+        const response = await apiClient.get<ApiResponse<PaginatedResponse>>('/fornecedor/listar', {
+            params: { page, per_page: perPage },
         });
 
-        // Indexar endereços e contatos por código para join O(1)
-        const enderecoMap = new Map<number, any>(
-            response.endereco.map((e: any) => [e.codendereco, e])
-        );
-        const contatoMap = new Map<number, any>(
-            response.contato.map((c: any) => [c.codcontato, c])
-        );
-
-        const suppliers = response.fornecedor.map((f: any) =>
-            normalizeSupplierData(
-                f,
-                enderecoMap.get(f.codendereco) ?? {},
-                contatoMap.get(f.codtelefone)  ?? {},
-            )
-        );
+        const suppliers = (response.data || []).map((f: any) => normalizeSupplierData(f));
 
         return { suppliers, total: response.total, page: response.page, perPage: response.per_page };
     },
@@ -108,12 +90,12 @@ export const fornecedorService = {
      *   return normalizeSupplierData(response.data);
      */
     async obter(codfornecedor: number): Promise<Supplier> {
-        // Busca uma página grande para garantir que o registro esteja incluso.
-        // Substitua por rota dedicada quando disponível no backend.
-        const { suppliers } = await this.listar(1, 500);
-        const found = suppliers.find((s) => s.codfornecedor === codfornecedor);
-        if (!found) throw new Error(`Fornecedor ${codfornecedor} não encontrado`);
-        return found;
+        const response = await apiClient.get<ApiResponse<any>>(`/fornecedor/${codfornecedor}`);
+        const supplier = normalizeSupplierData(response.data ?? response);
+        if (!supplier || supplier.codfornecedor === undefined) {
+            throw new Error(`Fornecedor ${codfornecedor} não encontrado`);
+        }
+        return supplier;
     },
 
     /**
