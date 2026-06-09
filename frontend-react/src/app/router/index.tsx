@@ -15,6 +15,7 @@ import CadastroUsuario from '@/pages/cadastro/cadastroUsuario';
 import NovoPedido from '@/pages/vendas/NovoPedido';
 import ControleEstoque from '@/pages/estoque/ControleEstoque';
 import authService from '@/services/authService';
+import Parametros from '@/pages/configuracoes/Parametros';
 
 const ProtectedRoute = () => {
   return authService.isAuthenticated() ? <Outlet /> : <Navigate to="/login" replace />;
@@ -45,6 +46,7 @@ const AppRouter: React.FC = () => {
         <Route path="/chat" element={<Chat />} />
         <Route path="/vendas" element={<NovoPedido />} />
         <Route path="/estoque" element={<ControleEstoque />} />
+        <Route path="/parametros" element={<Parametros />} />
       </Route>
 
       <Route

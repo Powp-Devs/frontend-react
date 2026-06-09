@@ -53,6 +53,11 @@ const Icons = {
       <path d="M7 11h2v6H7zm4 0h2v6h-2zm4 0h2v6h-2z"/>
     </svg>
   ),
+  Parametros: () => (
+    <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
+      <path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"></path>
+    </svg>
+  ),
   Logout: () => (
     <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
       <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
@@ -89,6 +94,11 @@ const menuItems: MenuItem[] = [
     label: 'Estoque',
     icon: <Icons.Estoque />,
     path: '/estoque'
+  },
+  {
+    label: 'Parâmetros',
+    icon: <Icons.Parametros />,
+    path: '/parametros'
   }
 ];
 
