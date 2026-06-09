@@ -7,6 +7,16 @@ import { ToastContainer } from "@/components/ToastContainer";
 
 import "@/styles/parametros.css";
 
+// Ícone de Edição padrão do sistema
+const EditIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+    </svg>
+);
+
 const Parametros: React.FC = () => {
     const { parametros, loading, error, updateParametro } = useParametroManager();
     const { toasts, removeToast, success, error: toastError } = useToast();
@@ -49,46 +59,66 @@ const Parametros: React.FC = () => {
             <main className="main-content">
                 <Header title="Gestão de Parâmetros" userName="Admin" />
 
-                <div className="content-header" style={{ padding: "20px" }}>
-                    <h2>Parâmetros do ERP</h2>
-                    <p style={{ color: "#6b7280" }}>Gerencie as regras de negócio e limites do sistema.</p>
+                <div className="content-header">
+                    <div>
+                        <h2>Parâmetros de Presidência</h2>
+                        <p>Parâmetros gerais de Configurações do sistema.</p>
+                    </div>
                 </div>
 
                 {loading ? (
-                    <div style={{ padding: "20px" }}>Carregando...</div>
+                    <div style={{ padding: "20px", textAlign: "center" }}>Carregando...</div>
                 ) : (
-                    <section className="table-section">
+                    <section className="parametros-section">
                         <div className="table-container">
-                            <table className="data-table">
+                            <table className="parametros-table">
                                 <thead>
                                     <tr>
-                                        <th>Cód.</th>
+                                        <th style={{ width: "80px" }}>Cód.</th>
                                         <th>Descrição do Parâmetro</th>
                                         <th>Chave Interna</th>
                                         <th>Valor Atual</th>
-                                        <th>Status</th>
-                                        <th>Ações</th>
+                                        <th style={{ width: "120px" }}>Status</th>
+                                        <th style={{ width: "80px", textAlign: "center" }}>Editar</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {parametros.map((param) => (
                                         <tr key={param.codparametro}>
                                             <td>{param.codparametro}</td>
-                                            {/* Exibimos a descrição que é amigável para o usuário final */}
                                             <td>{param.descricao}</td> 
-                                            <td><code style={{ background: "#f3f4f6", padding: "2px 6px", borderRadius: "4px" }}>{param.nome_parametro}</code></td>
-                                            <td><strong>{param.valor}</strong></td>
-                                            <td>{param.status === 'A' ? 'Ativo' : 'Inativo'}</td>
+                                            <td><code>{param.nome_parametro}</code></td>
+                                            <td>{param.valor}</td>
                                             <td>
+                                                <span style={{
+                                                    padding: "4px 8px",
+                                                    borderRadius: "4px",
+                                                    backgroundColor: param.status === 'A' ? '#d4edda' : '#f8d7da',
+                                                    color: param.status === 'A' ? '#155724' : '#721c24',
+                                                    fontSize: "0.85rem",
+                                                    fontWeight: "500",
+                                                }}>
+                                                    {param.status === 'A' ? 'Ativo' : 'Inativo'}
+                                                </span>
+                                            </td>
+                                            <td style={{ textAlign: "center" }}>
                                                 <button 
-                                                    className="btn btn-secondary" 
+                                                    className="action-btn edit-btn" 
                                                     onClick={() => openEditModal(param)}
+                                                    title="Editar Parâmetro"
                                                 >
-                                                    Alterar
+                                                    <EditIcon />
                                                 </button>
                                             </td>
                                         </tr>
                                     ))}
+                                    {parametros.length === 0 && (
+                                        <tr>
+                                            <td colSpan={6} style={{ textAlign: "center", padding: "20px" }}>
+                                                Nenhum parâmetro encontrado.
+                                            </td>
+                                        </tr>
+                                    )}
                                 </tbody>
                             </table>
                         </div>
@@ -97,8 +127,8 @@ const Parametros: React.FC = () => {
 
                 {/* MODAL DE EDIÇÃO */}
                 {isModalOpen && editingParam && (
-                    <div className="modal-show" style={{ display: "flex" }}>
-                        <div className="modal-content" style={{ maxWidth: "500px" }}>
+                    <div className="modal-show">
+                        <div className="modal-content">
                             <div className="modal-header">
                                 <h2>Alterar Parâmetro</h2>
                                 <button className="close-modal" onClick={() => setIsModalOpen(false)}>&times;</button>
