@@ -312,7 +312,6 @@ Verifica:
 
 ## 📚 Documentação
 
-- **[ARCHITECTURE.md](../ARCHITECTURE.md)** - Explicação detalhada da arquitetura (obrigatório ler!)
 - **[React Docs](https://react.dev)** - Documentação oficial React
 - **[React Router](https://reactrouter.com)** - Client-side routing
 - **[Axios Docs](https://axios-http.com)** - HTTP client
