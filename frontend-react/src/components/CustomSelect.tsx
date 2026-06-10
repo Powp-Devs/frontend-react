@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import "@/styles/customSelect.css";
 
 interface Option {
   value: string | number;
@@ -36,7 +37,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   }, []);
 
   return (
-    <div className="custom-select-wrapper" ref={ref}>
+    <div className="custom-select-wrapper" ref={ref} style={{ position: "relative" }}>
       <button
         type="button"
         className={`custom-select-trigger ${isOpen ? "open" : ""}`}
