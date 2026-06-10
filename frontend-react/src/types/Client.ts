@@ -1,15 +1,29 @@
-export type SortColumn = "id" | "nome" | "email" | "telefone";
+export type SortColumn = "id" | "nome" | "email" | "telefone" | "cpf_cnpj" | "cidade" | "estado" | "cep";
 
 export interface Client {
   id: number;
   nome: string;
   email: string;
+  email2?: string;
   telefone?: string;
+  celular?: string;
   tipo_pessoa?: 'fisica' | 'juridica';
   cpf_cnpj?: string;
+  fantasia?: string;
+  obs?: string;
+  bloqueio?: string;
+  motivo_bloq?: string;
+  rg?: string;
+  dt_nascimento?: string;
+  inscricaoestadual?: string;
+  dtabertura?: string;
   endereco?: string;
+  logradouro?: string;
+  numero?: string;
+  bairro?: string;
   cidade?: string;
   estado?: string;
+  pais?: string;
   cep?: string;
   data_criacao?: string;
   data_atualizacao?: string;

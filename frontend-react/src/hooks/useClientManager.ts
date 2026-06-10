@@ -16,52 +16,130 @@ const formatISODate = (date: Date): string => {
   return date.toISOString().split('T')[0];
 };
 
+const normalizeBackendPessoa = (cliente: any) => {
+  let tipopessoa = cliente.tipopessoa;
+  let pessoaFisica = cliente.pessoa_fisica || cliente.pessoaFisica || {};
+  let pessoaJuridica = cliente.pessoa_juridica || cliente.pessoaJuridica || {};
+
+  if (tipopessoa && typeof tipopessoa === 'object') {
+    const nested = tipopessoa;
+    tipopessoa = nested.cnpj || nested.ie || nested.dtabertura ? 'J' : 'F';
+
+    if (tipopessoa === 'F') {
+      pessoaFisica = nested;
+    } else {
+      pessoaJuridica = nested;
+    }
+  }
+
+  return { tipopessoa, pessoaFisica, pessoaJuridica };
+};
+
 const mapBackendClient = (cliente: any): Client => {
   const contato = cliente.contato || {};
   const endereco = cliente.endereco || {};
+  const { tipopessoa, pessoaFisica, pessoaJuridica } = normalizeBackendPessoa(cliente);
+
+  const isJuridica = tipopessoa === 'J';
+  const isFisica = tipopessoa === 'F';
 
   return {
     id: cliente.codcliente,
     nome: cliente.cliente,
+    fantasia: cliente.fantasia || '',
     email: contato.email || '',
-    telefone: contato.telefone || contato.celular || '',
-    endereco: endereco.logradouro ? `${endereco.logradouro}, ${endereco.numero || ''}`.trim() : '',
+    email2: contato.email2 || '',
+    telefone: contato.telefone || '',
+    celular: contato.celular || contato.telefone || '',
+    tipo_pessoa: isJuridica ? 'juridica' : 'fisica',
+    cpf_cnpj: isFisica ? (pessoaFisica.cpf || cliente.cpf || '') : (pessoaJuridica.cnpj || cliente.cnpj || ''),
+    obs: cliente.obs || '',
+    bloqueio: cliente.bloqueio || 'N',
+    motivo_bloq: cliente.motivo_bloq || '',
+    rg: pessoaFisica.rg || cliente.rg || '',
+    dt_nascimento: pessoaFisica.dt_nascimento ? new Date(pessoaFisica.dt_nascimento).toISOString().split('T')[0] : (cliente.dt_nascimento ? new Date(cliente.dt_nascimento).toISOString().split('T')[0] : ''),
+    inscricaoestadual: pessoaJuridica.ie || cliente.inscricaoestadual || '',
+    dtabertura: pessoaJuridica.dtabertura ? new Date(pessoaJuridica.dtabertura).toISOString().split('T')[0] : (cliente.dtabertura ? new Date(cliente.dtabertura).toISOString().split('T')[0] : ''),
+    endereco: endereco.logradouro ? `${endereco.logradouro}${endereco.numero ? `, ${endereco.numero}` : ''}`.trim() : '',
+    logradouro: endereco.logradouro || '',
+    numero: endereco.numero?.toString() || '',
+    bairro: endereco.bairro || '',
     cidade: endereco.cidade || '',
     estado: endereco.uf || '',
+    pais: endereco.pais || 'BR',
     cep: endereco.cep || '',
-    tipo_pessoa: cliente.tipopessoa === 'J' ? 'juridica' : 'fisica',
     data_criacao: cliente.dtcadastro ? new Date(cliente.dtcadastro).toLocaleDateString('pt-BR') : undefined
   };
 };
 
+const extractApiData = (response: any) => {
+  if (!response) return null;
+  return response?.data ?? response;
+};
+
 const mapBackendClients = (response: any): Client[] => {
-  const clientes = response?.data || [];
+  const clientes = extractApiData(response) || [];
   return clientes.map((cliente: any) => mapBackendClient(cliente));
 };
 
-const createClientePayload = (clientData: Partial<Client>) => ({
-  cliente: clientData.nome || '',
-  fantasia: clientData.nome || '',
-  dtcadastro: formatISODate(new Date()),
-  tipopessoa: 'F',
-  obs: '',
-  bloqueio: 'N',
-  motivo_bloq: '',
-  cep: clientData.cep || '',
-  logradouro: clientData.endereco || '',
-  numero: 'S/N',
-  bairro: '',
-  cidade: clientData.cidade || '',
-  uf: clientData.estado || 'SP',
-  pais: 'BR',
-  telefone: clientData.telefone || '',
-  celular: clientData.telefone || '',
-  email: clientData.email || '',
-  email2: clientData.email || '',
-  cpf: '00000000000',
-  rg: '000000000',
-  dt_nascimento: formatISODate(new Date())
-});
+const mapBackendClientResponse = (response: any): Client => {
+  const cliente = extractApiData(response) || {};
+  return mapBackendClient(cliente);
+};
+
+const extractErrorMessage = (err: any, fallback = 'Erro inesperado.') => {
+  const detail = err?.response?.data?.detail;
+
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) {
+    return detail
+      .map((item) => {
+        if (typeof item === 'string') return item;
+        if (item?.msg) return item.msg;
+        if (typeof item === 'object') return Object.values(item).flat().join(', ');
+        return JSON.stringify(item);
+      })
+      .filter(Boolean)
+      .join(' | ');
+  }
+  if (detail && typeof detail === 'object') {
+    return detail.message || JSON.stringify(detail);
+  }
+
+  return err?.message || fallback;
+};
+
+const createClientePayload = (clientData: Partial<Client>) => {
+  const tipopessoa = clientData.tipo_pessoa === 'juridica' ? 'J' : 'F';
+  const cpfCnpjValue = clientData.cpf_cnpj?.replace(/\D/g, '') || '';
+
+  return {
+    cliente: clientData.nome || '',
+    fantasia: clientData.fantasia || clientData.nome || '',
+    dtcadastro: formatISODate(new Date()),
+    tipopessoa,
+    obs: clientData.obs || '',
+    bloqueio: clientData.bloqueio || 'N',
+    motivo_bloq: clientData.motivo_bloq || '',
+    cpf: tipopessoa === 'F' ? cpfCnpjValue || undefined : undefined,
+    rg: clientData.rg || undefined,
+    dt_nascimento: clientData.dt_nascimento || undefined,
+    cnpj: tipopessoa === 'J' ? cpfCnpjValue || undefined : undefined,
+    inscricaoestadual: clientData.inscricaoestadual || undefined,
+    dtabertura: clientData.dtabertura || undefined,
+    cep: clientData.cep || '',
+    logradouro: clientData.logradouro || '',
+    numero: clientData.numero || '',
+    bairro: clientData.bairro || '',
+    cidade: clientData.cidade || '',
+    uf: clientData.estado?.trim() ? clientData.estado : undefined,
+    pais: clientData.pais || 'BR',
+    telefone: clientData.telefone || '',
+    celular: clientData.celular || clientData.telefone || '',
+    email: clientData.email || '',
+    email2: clientData.email2 || undefined,
+  };
+};
 
 export function useClientManager() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -87,7 +165,7 @@ export function useClientManager() {
       const mapped = mapBackendClients(response);
       setClients(mapped);
     } catch (err: any) {
-      setError(err?.response?.data?.detail || 'Erro ao carregar clientes.');
+      setError(extractErrorMessage(err, 'Erro ao carregar clientes.'));
     } finally {
       setLoading(false);
     }
@@ -99,7 +177,7 @@ export function useClientManager() {
       await clienteService.criar(payload);
       await loadClients();
     } catch (err: any) {
-      setError(err?.response?.data?.detail || 'Erro ao adicionar cliente.');
+      setError(extractErrorMessage(err, 'Erro ao adicionar cliente.'));
       throw err;
     }
   };
@@ -110,9 +188,14 @@ export function useClientManager() {
       await clienteService.atualizar(id, payload);
       await loadClients();
     } catch (err: any) {
-      setError(err?.response?.data?.detail || 'Erro ao atualizar cliente.');
+      setError(extractErrorMessage(err, 'Erro ao atualizar cliente.'));
       throw err;
     }
+  };
+
+  const getClientById = async (id: number): Promise<Client> => {
+    const response = await clienteService.obter(id);
+    return mapBackendClientResponse(response);
   };
 
   const deleteClient = async (id: number) => {
@@ -125,7 +208,7 @@ export function useClientManager() {
         return newSet;
       });
     } catch (err: any) {
-      setError(err?.response?.data?.detail || 'Erro ao excluir cliente.');
+      setError(extractErrorMessage(err, 'Erro ao excluir cliente.'));
       throw err;
     }
   };
@@ -155,7 +238,7 @@ export function useClientManager() {
   };
 
   const exportToCSV = () => {
-    const columns = ['Cod.', 'Nome', 'E-MAIL', 'Telefone'];
+    const columns = ['Cod.', 'Nome', 'E-MAIL', 'Telefone', 'Celular', 'CPF/CNPJ', 'CEP', 'Cidade', 'UF'];
     let csvContent = columns.join(',') + '\n';
 
     clients.forEach((client) => {
@@ -163,7 +246,12 @@ export function useClientManager() {
         client.id,
         `"${client.nome.replace(/"/g, '""')}"`,
         client.email,
-        client.telefone || ''
+        client.telefone || '',
+        client.celular || '',
+        client.cpf_cnpj || '',
+        client.cep || '',
+        client.cidade || '',
+        client.estado || ''
       ];
       csvContent += row.join(',') + '\n';
     });
@@ -187,7 +275,11 @@ export function useClientManager() {
         (c) =>
           c.id.toString().includes(term) ||
           c.nome.toLowerCase().includes(term) ||
-          c.email.toLowerCase().includes(term)
+          c.email.toLowerCase().includes(term) ||
+          (c.cpf_cnpj || '').toLowerCase().includes(term) ||
+          (c.cidade || '').toLowerCase().includes(term) ||
+          (c.estado || '').toLowerCase().includes(term) ||
+          (c.cep || '').toLowerCase().includes(term)
       );
     }
 
@@ -225,6 +317,7 @@ export function useClientManager() {
     addClient,
     updateClient,
     deleteClient,
+    getClientById,
     toggleSelection,
     toggleSelectAll,
     handleSort,

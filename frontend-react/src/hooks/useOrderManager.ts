@@ -19,6 +19,7 @@ export interface ItemCarrinho {
 interface cliente {
   codcliente: number;
   cliente: string;
+  fantasia?: string;
 }
 
 interface ModalBuscaState {
@@ -402,7 +403,7 @@ export function usePedido(): UsePedidoReturn {
         try {
           const response = await api.get<any>('/clientes/listar');
           console.log("Resposta clientes:", response);
-          const listaClientes = response?.data?.cliente || response?.cliente || [];
+          const listaClientes = response?.data?.data || response?.data || [];
           setClientes(listaClientes);
         } catch (error) {
           console.error("Erro ao carregar clientes:", error);

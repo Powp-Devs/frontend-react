@@ -4,8 +4,8 @@ import { useToastContext } from "@/components/ToastContext";
 import { CustomSelect } from "@/components/CustomSelect";
 import { usePedido } from "@/hooks/useOrderManager";
 import { fmt, calcItem } from "./pedidos.utils";
-import IconCarrinho from "@/assets/icons/shopping_cart.svg";
-import IconSearch from "@/assets/icons/Search.svg";
+import IconCarrinho from "@/assets/icons/shopping_cart_48dp_004D40_FILL0_wght400_GRAD0_opsz48.svg?react";
+import IconSearch from "@/assets/icons/Search.svg?react";
 
 // ─── Tipagens ─────────────────────────────────────────────────────────────────
 export type TabNovoPedido = "dados_gerais" | "itens";
@@ -61,6 +61,9 @@ function ModalBuscaProduto({ onSelect, onClose }: { onSelect: (p: any) => void; 
         {/* Busca */}
         <div className="modal-search-wrapper">
           <div className="modal-search-input-wrapper">
+          <div className="modal-search-icon">
+            <IconSearch width={20} height={20} fill="#004d40" />
+          </div>
             <input
               autoFocus
               value={termo}
@@ -200,8 +203,8 @@ export default function NovoPedido({ onVoltar }: { onVoltar?: () => void }) {
   const { warning } = useToastContext();
   const { clientes } = usePedido();
     const clienteOptions = clientes.map(c => ({
-    value: c.codcliente,
-    label: `${c.codcliente} – ${c.cliente}`,
+    value: String(c.codcliente),
+    label: `${c.codcliente} – ${c.fantasia ?? c.cliente}`,
   }));
 
 
@@ -295,7 +298,7 @@ export default function NovoPedido({ onVoltar }: { onVoltar?: () => void }) {
           {tab === "dados_gerais" && (
             <div className="tab-content">
               <div className="form-grid">
-                    <div>
+                    <div className="custom-select">
                       <label className="form-label">CÓD. CLIENTE</label>
                       <CustomSelect
                         options={clienteOptions}
@@ -355,7 +358,7 @@ export default function NovoPedido({ onVoltar }: { onVoltar?: () => void }) {
               {itens.length === 0 ? (
                 <div className="empty-state">
                   <div className="empty-icon">
-                    
+                    <IconCarrinho width={48} height={48} />
                     </div>
                   <p className="empty-text">Nenhum item adicionado.</p>
                   <p className="empty-subtext">Clique em "Adicionar Item" para buscar produtos.</p>
