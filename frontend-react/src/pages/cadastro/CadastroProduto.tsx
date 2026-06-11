@@ -1,4 +1,5 @@
 import React, { useState, FormEvent, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Header from "@/shared/components/layout/Header";
 import { useProductManager } from "@/hooks/useProductManager";
 import { Product, SortColumn } from "@/types/Product";
@@ -111,8 +112,9 @@ const CadastroProduto: React.FC = () => {
     useEffect(() => {
         async function carregarCategorias() {
             try {
-                const response = await api.get<any>('/categoria/listar');
-                const lista = response?.plano || response?.data?.plano || [];
+                // per_page=1000 para trazer todas para o lookup de busca
+                const response = await api.get<any>('/categoria/listar?per_page=1000');
+                const lista = response?.categoria || [];
                 setCategorias(lista);
             } catch (err) {
                 console.error("Erro ao carregar categorias:", err);
@@ -505,8 +507,8 @@ const CadastroProduto: React.FC = () => {
             )}
 
             {/* ── Modal busca fornecedor ──────────────────────────────────────── */}
-            {isSupplierModalOpen && (
-                <div className="modal-overlay" style={{ zIndex: 600 }}>
+            {isSupplierModalOpen && createPortal(
+                <div className="modal-overlay" style={{ zIndex: 1100 }}>
                     <div className="modal-content lookup-modal">
                         <div className="modal-header-top">
                             <h2>Buscar Fornecedor</h2>
@@ -537,12 +539,13 @@ const CadastroProduto: React.FC = () => {
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* ── Modal busca categoria ───────────────────────────────────────── */}
-            {isCategoryModalOpen && (
-                <div className="modal-overlay" style={{ zIndex: 600 }}>
+            {isCategoryModalOpen && createPortal(
+                <div className="modal-overlay" style={{ zIndex: 1100 }}>
                     <div className="modal-content lookup-modal">
                         <div className="modal-header-top">
                             <h2>Buscar Categoria</h2>
@@ -573,11 +576,12 @@ const CadastroProduto: React.FC = () => {
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* ── Modal exclusao ──────────────────────────────────────────────── */}
-            {isDeleteModalOpen && (
+            {isDeleteModalOpen && createPortal(
                 <div className="modal-overlay">
                     <div className="modal-content delete-modal">
                         <div className="modal-header-top">
@@ -595,7 +599,8 @@ const CadastroProduto: React.FC = () => {
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );
