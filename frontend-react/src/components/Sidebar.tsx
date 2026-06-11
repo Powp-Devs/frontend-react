@@ -78,6 +78,7 @@ const menuItems: MenuItem[] = [
       { label: 'Setores',      path: '/cadastro-setor' },
       { label: 'Categorias',   path: '/cadastro-categoria' },
       { label: 'Usuários',     path: '/cadastro-usuario' },
+      { label: 'Cobranças',    path: '/cadastro-cobranca' },
     ],
   },
   {
