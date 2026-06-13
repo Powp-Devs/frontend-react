@@ -22,7 +22,7 @@ const Chat: React.FC = () => {
     {
       id: '1',
       type: 'ai',
-      content: 'Olá! Eu sou seu assistente IA para o ERP. Como posso ajudá-lo hoje? Posso fornecer informações sobre fornecedores, vendas, estoque, relatórios financeiros e muito mais!',
+      content: 'Olá! Eu sou o Powpeto seu assistente IA para o ERP. Como posso ajudá-lo hoje? Posso fornecer informações sobre regras de negócio, documentos empresariais e muito mais!',
       timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
     },
   ]);
@@ -239,7 +239,7 @@ const Chat: React.FC = () => {
             </div>
             
             <p className="tip-text">
-              💡 Dica: Pergunte sobre vendas, fornecedores, estoque, relatórios financeiros e muito mais!
+              💡 Dica: Pergunte sobre como cadastrar algo, como funciona os parâmetros so sistema!
             </p>
           </div>
 
