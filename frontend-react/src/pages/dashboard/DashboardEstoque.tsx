@@ -6,6 +6,20 @@ import '@/styles/dashboardEstoque.css';
 
 Chart.register(...registerables);
 
+const obterDatahoje = () => {
+  return new Date().toISOString().split('T')[0];
+};
+
+const obterPrimeiroDiaMes = () => {
+  const data = new Date();
+  const primeiroDia = new Date(data.getFullYear(), data.getMonth(), 1);
+
+  primeiroDia.setMinutes(primeiroDia.getMinutes() - primeiroDia.getTimezoneOffset());
+
+  return primeiroDia.toISOString().split('T')[0];
+};
+
+
 const formatMoeda = (valor: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
 
@@ -14,22 +28,26 @@ const DashboardEstoque: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
+  const [dataInicial, setDataInicial] = useState<string>(obterPrimeiroDiaMes());
+  const [dataFinal, setDataFinal] = useState<string>(obterDatahoje());
+
   const categoriasChartRef = useRef<HTMLCanvasElement>(null);
   const categoriasChartInstance = useRef<Chart | null>(null);
 
+  const carregarDados = async () => {
+    try {
+      setLoading(true);
+      const data = await dashboardService.getEstoque();
+      setDados(data);
+    } catch (e) {
+      setErro('Erro ao carregar dados do dashboard de estoque.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const carregar = async () => {
-      try {
-        setLoading(true);
-        const data = await dashboardService.getEstoque();
-        setDados(data);
-      } catch (e) {
-        setErro('Erro ao carregar dados do dashboard de estoque.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    carregar();
+    carregarDados();
   }, []);
 
   useEffect(() => {
@@ -73,6 +91,34 @@ const DashboardEstoque: React.FC = () => {
 
   return (
     <div className="de-container">
+      {/* BARRA DE FILTROS */}
+      <div className="dv-filter-bar">
+        <div className="dv-filter-group">
+          <label>Data Inicial:</label>
+          <input 
+            type="date" 
+            value={dataInicial} 
+            onChange={(e) => setDataInicial(e.target.value)} 
+            className="dv-date-input"
+          />
+        </div>
+        <div className="dv-filter-group">
+          <label>Data Final:</label>
+          <input 
+            type="date" 
+            value={dataFinal} 
+            onChange={(e) => setDataFinal(e.target.value)} 
+            className="dv-date-input"
+          />
+        </div>
+        <button 
+          onClick={carregarDados} 
+          className="dv-btn-filtrar"
+          disabled={loading}
+        >
+          {loading ? 'Filtrando...' : 'Filtrar'}
+        </button>
+      </div>
       {/* KPIs */}
       <div className="de-kpi-cards">
         <div className="de-kpi-card blue">
