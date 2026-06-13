@@ -14,9 +14,19 @@ export const dashboardService = {
       }
     }),
 
-  getEstoque: () =>
-    apiClient.get<DashboardEstoqueResponse>('/dashboard/estoque'),
+  getEstoque: (dataInicial?: string, dataFinal?: string) =>
+    apiClient.get<DashboardEstoqueResponse>('/dashboard/estoque', {
+      params: {
+        dtinicio: dataInicial,
+        dtfim: dataFinal
+      }
+    }),
 
-  getClientes: () =>
-    apiClient.get<DashboardClientesResponse>('/dashboard/clientes'),
+  getClientes: (dataInicial?: string, dataFinal?: string) =>
+    apiClient.get<DashboardClientesResponse>('/dashboard/clientes', {
+      params: {
+        dtinicio: dataInicial,
+        dtfim: dataFinal
+      }
+    }), 
 };
