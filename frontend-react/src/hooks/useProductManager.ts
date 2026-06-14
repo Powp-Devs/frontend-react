@@ -40,8 +40,9 @@ export const useProductManager = () => {
   useEffect(() => {
     async function carregarFornecedores() {
       try {
-        const response = await api.get<any>('/fornecedor/listar');
-        const listaFornecedores = response?.data?.fornecedor || response?.fornecedor || [];
+        // per_page=1000 para trazer todos para o lookup de busca
+        const response = await api.get<any>('/fornecedor/listar?per_page=1000');
+        const listaFornecedores = response?.data || [];
         setFornecedores(listaFornecedores);
       } catch (error) {
         console.error("Erro ao carregar fornecedores:", error);
