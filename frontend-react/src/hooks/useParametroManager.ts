@@ -38,9 +38,14 @@ export const useParametroManager = () => {
 
             const updated = await parametroService.atualizar(codparametro, valor, status, usuarioLogadoId);
             
-            // Atualiza a lista local para refletir a mudança imediatamente
+            // Atualiza a lista local para refletir a mudança imediatamente.
+            // Se a API retornar o objeto atualizado, usa ele; caso contrário, aplica
+            // os valores enviados sobre o item existente para evitar tela em branco.
             setParametros((prev) =>
-                prev.map((p) => (p.codparametro === codparametro ? updated : p))
+                prev.map((p) => {
+                    if (p.codparametro !== codparametro) return p;
+                    return updated ?? { ...p, valor, status };
+                })
             );
         } catch (err) {
             throw err;

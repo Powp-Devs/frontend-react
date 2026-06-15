@@ -63,6 +63,7 @@ const CadastroFornecedor: React.FC = () => {
     const [currentStep, setCurrentStep]                 = useState(0);
     const [isSubmitting, setIsSubmitting]               = useState(false);
     const [submitError, setSubmitError]                 = useState<string | null>(null);
+    const [isFetchingCnpj, setIsFetchingCnpj]           = useState(false);
 
     const initialFormState: Partial<Supplier> = {
         fornecedor:          "",
@@ -158,9 +159,15 @@ const CadastroFornecedor: React.FC = () => {
                     name="cnpj"
                     value={formData.cnpj || ""}
                     onChange={handleFormChange}
+                    onBlur={handleCnpjBlur}
                     placeholder={formData.tipopessoa === "F" ? "000.000.000-00" : "00.000.000/0000-00"}
                     required
                   />
+                  {isFetchingCnpj && (
+                        <span style={{ fontSize: '12px', color: '#007955', fontWeight: '500', whiteSpace: 'nowrap' }}>
+                            Buscando...
+                        </span>
+                    )}
                 </div>
               </div>
 
@@ -424,6 +431,43 @@ const CadastroFornecedor: React.FC = () => {
             })
             .finally(() => setIsSubmitting(false));
     };
+
+    const handleCnpjBlur = async () => {
+      if (formData.tipopessoa !== "J" || !formData.cnpj) return;
+
+      const cnpj = formData.cnpj.replace(/\D/g, "");
+
+      if (cnpj.length !== 14) return;
+
+      setIsFetchingCnpj(true);
+      try {
+        const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
+        if (!response.ok) throw new Error("CNPJ não encontrado, preencha os dados de forma manual");
+        const data = await response.json();
+
+        setFormData(prev => ({
+          ...prev,
+          fornecedor: data.razao_social || prev.fornecedor,
+          fantasia: data.nome_fantasia || prev.fantasia,
+          cep: data.cep ? data.cep.replace(/^(\d{5})(\d{3})$/, "$1-$2") : prev.cep,
+          logradouro: data.logradouro || prev.logradouro,
+          numero: data.numero || prev.numero,
+          bairro: data.bairro || prev.bairro,
+          cidade: data.municipio || prev.cidade,
+          uf: data.uf || prev.uf,
+          telefone: data.ddd_telefone_1 || prev.telefone,
+          email: data.email || prev.email,
+          // Opcional: Pegar o primeiro sócio como representante legal
+          nome_representante: data.qsa && data.qsa.length > 0 ? data.qsa[0].nome_socio : prev.nome_representante
+        }));
+
+        success("CNPJ encontrado", "Dados preenchidos de forma automarica.")
+      } catch (err) {
+        warning("Busca de CNPJ", "Não foi possível recuperar os dados. Preencha manualmente.");
+      } finally {
+        setIsFetchingCnpj(false);
+      } 
+    } 
 
     // Trata input, select e textarea com um único handler
     const handleFormChange = (

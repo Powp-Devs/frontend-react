@@ -22,7 +22,7 @@ export const parametroService = {
         };
     },
 
-    async atualizar(codparametro: number, valor: string, status: string, codusuario: number): Promise<Parametro> {
+    async atualizar(codparametro: number, valor: string, status: string, codusuario: number): Promise<Parametro | null> {
         const payload = {
             valor,
             status,
@@ -31,6 +31,7 @@ export const parametroService = {
 
         const response = await apiClient.put(`/parametros/atualizar/${codparametro}`, payload);
         const data = (response as any).data || response;
-        return data.data;
+        // Suporta tanto { data: {...} } quanto { parametro: {...} } ou o objeto direto
+        return data.data ?? data.parametro ?? (data.codparametro ? data : null);
     }
 }
