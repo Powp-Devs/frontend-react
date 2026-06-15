@@ -87,6 +87,7 @@ const CadastroCliente: React.FC = () => {
     const [editingId, setEditingId] = useState<number | null>(null);
     const [clientToDelete, setClientToDelete] = useState<number | null>(null);
     const [isEditLoading, setIsEditLoading] = useState(false);
+    const [isFetchingCnpj, setIsFetchingCnpj] = useState(false);
 
     // Estado do Formulário
     const initialFormState: Partial<Client> = {
@@ -225,8 +226,15 @@ const CadastroCliente: React.FC = () => {
                                     name="cpf_cnpj"
                                     value={formData.cpf_cnpj || ''}
                                     onChange={handleFormChange}
+                                    onBlur={handleCnpjBlur}
                                     required
                                 />
+                                {/* 💡 Exibe o texto enquanto a API está a carregar */}
+                                    {isFetchingCnpj && (
+                                        <span style={{ fontSize: '12px', color: '#007955', fontWeight: '500', whiteSpace: 'nowrap' }}>
+                                            Buscando...
+                                        </span>
+                                    )}
                             </div>
                         </div>
 
@@ -420,6 +428,41 @@ const CadastroCliente: React.FC = () => {
             );
         } finally {
             setIsEditLoading(false);
+        }
+    };
+
+    const handleCnpjBlur = async () => {
+        if (formData.tipo_pessoa !== 'juridica' || !formData.cpf_cnpj) return;
+
+        const cnpj = formData.cpf_cnpj.replace(/\D/g, "");
+
+        if (cnpj.length !== 14) return;
+
+        setIsFetchingCnpj(true);
+        try {
+            const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
+            if (!response.ok) throw new Error("CNPJ não encontrado na Receita Federal");
+            const data = await response.json();
+
+            setFormData(prev => ({
+                ...prev,
+                nome: data.razao_social || prev.nome,
+                fantasia: data.nome_fantasia || prev.fantasia,
+                cep: data.cep ? data.cep.replace(/^(\d{5})(\d{3})$/, "$1-$2") : prev.cep,
+                logradouro: data.logradouro || prev.logradouro,
+                numero: data.numero || prev.numero,
+                bairro: data.bairro || prev.bairro,
+                cidade: data.municipio || prev.cidade,
+                estado: data.uf || prev.estado, 
+                telefone: data.ddd_telefone_1 || prev.telefone,
+                email: data.email || prev.email,
+            }));
+            
+            success("CNPJ Encontrado", "Os dados da empresa foram preenchidos automaticamente.");
+        } catch (err) {
+            showError("Busca de CNPJ", "Não foi possível recuperar os dados. Preencha manualmente.");
+        } finally {
+            setIsFetchingCnpj(false);
         }
     };
 
